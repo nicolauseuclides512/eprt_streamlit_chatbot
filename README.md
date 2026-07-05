@@ -1,38 +1,38 @@
-# Chatbot RAG EPrT LaC dengan Streamlit + Gemini
+# Chatbot RAG LaC Telkom University dengan Streamlit + Gemini
 
-Project ini adalah versi Python lokal dari notebook Colab Streamlit. Aplikasi dibuat untuk dijalankan dengan Streamlit dan dapat di-deploy melalui GitHub ke Streamlit Community Cloud.
+Project ini adalah aplikasi chatbot berbasis Streamlit untuk menjawab pertanyaan dari dokumen kompilasi informasi website Telkom University Language Center (LaC).
 
 Chatbot menggunakan pendekatan RAG (Retrieval-Augmented Generation):
-1. Membaca dokumen PDF dari folder `data/`.
+1. Membaca PDF dari folder `data/`.
 2. Mengekstrak teks dari PDF.
-3. Memecah teks menjadi chunk.
+3. Memecah teks menjadi chunk dengan overlap seperti pola `RecursiveCharacterTextSplitter`.
 4. Membuat embedding dengan Gemini.
-5. Mencari chunk yang paling relevan dengan FAISS.
-6. Mengirim konteks dokumen ke Gemini untuk menghasilkan jawaban.
+5. Mencari chunk paling relevan menggunakan FAISS.
+6. Mengirim konteks dokumen ke Gemini untuk menghasilkan jawaban berbasis sumber.
 
-## Struktur folder
+## Struktur Folder
 
 ```text
 eprt_streamlit_chatbot/
-├── app.py
-├── requirements.txt
-├── README.md
-├── .gitignore
-├── .streamlit/
-│   └── secrets.toml.example
-└── data/
-    └── Panduan_EPrT_LaC_Telkom_University.pdf
+|-- app.py
+|-- requirements.txt
+|-- README.md
+|-- .gitignore
+|-- .streamlit/
+|   |-- config.toml
+|   `-- secrets.toml.example
+`-- data/
+    |-- Kompilasi_Informasi_Website_LaC_Telkom_University.pdf
+    `-- Panduan_EPrT_LaC_Telkom_University.pdf
 ```
 
-## Menjalankan di komputer lokal
+## Menjalankan Lokal
 
-Buat virtual environment:
+Buat dan aktifkan virtual environment:
 
 ```bash
 python -m venv .venv
 ```
-
-Aktifkan virtual environment.
 
 Windows:
 
@@ -46,46 +46,24 @@ macOS/Linux:
 source .venv/bin/activate
 ```
 
-Install library:
+Install dependency:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Siapkan API key.
-
-Opsi 1, menggunakan environment variable:
-
-Windows PowerShell:
-
-```powershell
-$env:GEMINI_API_KEY="ISI_API_KEY_ANDA"
-```
-
-macOS/Linux:
+Salin contoh secrets:
 
 ```bash
-export GEMINI_API_KEY="ISI_API_KEY_ANDA"
-```
-
-Opsi 2, menggunakan file Streamlit Secrets lokal:
-
-```bash
-mkdir .streamlit
 copy .streamlit\secrets.toml.example .streamlit\secrets.toml
 ```
 
-Untuk macOS/Linux:
-
-```bash
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-```
-
-Lalu edit `.streamlit/secrets.toml`:
+Isi `.streamlit/secrets.toml`:
 
 ```toml
 GEMINI_API_KEY = "ISI_API_KEY_ANDA"
 GEMINI_MODEL = "gemini-2.5-flash"
+PDF_PATH = "data/Kompilasi_Informasi_Website_LaC_Telkom_University.pdf"
 ```
 
 Jalankan aplikasi:
@@ -94,35 +72,23 @@ Jalankan aplikasi:
 streamlit run app.py
 ```
 
-## Deploy ke Streamlit Community Cloud lewat GitHub
+## Deploy Streamlit Community Cloud
 
-1. Buat repository GitHub baru.
-2. Upload semua file project ini ke repository.
-3. Pastikan file `.streamlit/secrets.toml` tidak ikut di-upload.
-4. Buka Streamlit Community Cloud.
-5. Pilih repository GitHub.
-6. Main file path: `app.py`.
-7. Tambahkan secrets pada menu app settings:
+1. Upload project ke GitHub.
+2. Pastikan `.streamlit/secrets.toml` tidak ikut di-upload.
+3. Buat app baru di Streamlit Community Cloud.
+4. Set main file path ke `app.py`.
+5. Tambahkan secrets yang sama seperti contoh di atas pada menu app settings.
+6. Deploy.
 
-```toml
-GEMINI_API_KEY = "ISI_API_KEY_ANDA"
-GEMINI_MODEL = "gemini-2.5-flash"
-```
+## Mengganti Dokumen PDF
 
-8. Deploy.
-
-## Mengganti dokumen PDF
-
-Ganti file PDF di folder `data/`, lalu sesuaikan nama file pada `PDF_PATH` di Secrets jika namanya berbeda:
+Jika ingin memakai dokumen lain, simpan PDF di folder `data/`, lalu ubah nilai `PDF_PATH` di secrets:
 
 ```toml
 PDF_PATH = "data/nama_dokumen_baru.pdf"
 ```
 
-Jika hanya ada satu file PDF di folder `data/`, aplikasi akan mencoba membaca file PDF tersebut secara otomatis.
+## Catatan Keamanan
 
-## Catatan keamanan
-
-Jangan commit file `.streamlit/secrets.toml` ke GitHub karena berisi API key. File ini sudah dimasukkan ke `.gitignore`.
-
-Jika dokumen knowledge base bersifat internal atau rahasia, jangan upload dokumen tersebut ke repository publik.
+Jangan commit file `.streamlit/secrets.toml` ke GitHub karena berisi API key.

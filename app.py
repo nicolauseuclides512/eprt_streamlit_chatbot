@@ -19,21 +19,25 @@ from pypdf import PdfReader
 
 APP_DIR = Path(__file__).resolve().parent
 DATA_DIR = APP_DIR / "data"
-DEFAULT_PDF_PATH = DATA_DIR / "Panduan_EPrT_LaC_Telkom_University.pdf"
+DEFAULT_PDF_PATH = DATA_DIR / "Kompilasi_Informasi_Website_LaC_Telkom_University.pdf"
 
 DEFAULT_GENERATION_MODEL = "gemini-2.5-flash"
 EMBEDDING_MODEL_CANDIDATES = ["gemini-embedding-2", "gemini-embedding-001"]
 EMBEDDING_DIMENSION = 768
+CHUNK_SIZE = 500
+CHUNK_OVERLAP = 100
+RETRIEVAL_TOP_K = 8
 
 SYSTEM_INSTRUCTION = """
-Anda adalah chatbot informasi EPrT LaC Telkom University.
+Anda adalah chatbot informasi Telkom University Language Center (LaC).
 
 Aturan utama:
-1. Jawab hanya berdasarkan konteks dokumen yang diberikan.
+1. Jawab hanya berdasarkan konteks dokumen kompilasi website LaC yang diberikan.
 2. Gunakan bahasa Indonesia yang sopan, jelas, dan ringkas.
-3. Jangan mengarang jadwal, biaya, tautan, atau ketentuan di luar dokumen.
-4. Jika informasi tidak tersedia pada konteks, katakan bahwa informasi tersebut belum tersedia di dokumen.
-5. Jika ada angka, biaya, jadwal, durasi, tautan, atau kontak, tuliskan secara teliti sesuai konteks.
+3. Jangan mengarang jadwal, biaya, tautan, kontak, persyaratan, atau ketentuan di luar dokumen.
+4. Jika informasi tidak tersedia pada konteks, katakan bahwa jawaban tidak tersedia dalam konteks dokumen.
+5. Jika ada angka, tanggal, biaya, jadwal, durasi, tautan, atau kontak, tuliskan secara teliti sesuai konteks.
+6. Jika konteks memuat beberapa layanan yang mirip, jelaskan perbedaannya agar pengguna tidak tertukar.
 """.strip()
 
 
@@ -119,19 +123,17 @@ def extract_pdf_pages(pdf_path: Path) -> list[dict[str, Any]]:
     return pages
 
 
-def chunk_words(text: str, chunk_size: int = 220, overlap: int = 50) -> list[str]:
-    words = text.split()
+def split_with_overlap(text: str, chunk_size: int, overlap: int) -> list[str]:
     chunks: list[str] = []
     start = 0
 
-    while start < len(words):
-        end = start + chunk_size
-        chunk = " ".join(words[start:end]).strip()
-
+    while start < len(text):
+        end = min(start + chunk_size, len(text))
+        chunk = text[start:end].strip()
         if chunk:
             chunks.append(chunk)
 
-        if end >= len(words):
+        if end >= len(text):
             break
 
         start = max(0, end - overlap)
@@ -139,11 +141,67 @@ def chunk_words(text: str, chunk_size: int = 220, overlap: int = 50) -> list[str
     return chunks
 
 
+def recursive_chunk_text(
+    text: str,
+    chunk_size: int = CHUNK_SIZE,
+    overlap: int = CHUNK_OVERLAP,
+) -> list[str]:
+    """
+    Versi ringan dari pola RecursiveCharacterTextSplitter pada notebook:
+    pecah berdasarkan paragraf/kalimat lebih dulu, lalu fallback ke panjang karakter.
+    """
+    separators = ["\n\n", "\n", ". ", "; ", ", ", " "]
+
+    def split_recursive(segment: str, separator_index: int = 0) -> list[str]:
+        segment = segment.strip()
+        if not segment:
+            return []
+        if len(segment) <= chunk_size:
+            return [segment]
+        if separator_index >= len(separators):
+            return split_with_overlap(segment, chunk_size, overlap)
+
+        separator = separators[separator_index]
+        parts = [part.strip() for part in segment.split(separator) if part.strip()]
+        if len(parts) == 1:
+            return split_recursive(segment, separator_index + 1)
+
+        chunks: list[str] = []
+        current = ""
+
+        for part in parts:
+            candidate = f"{current}{separator}{part}".strip() if current else part
+            if len(candidate) <= chunk_size:
+                current = candidate
+                continue
+
+            if current:
+                chunks.extend(split_recursive(current, separator_index + 1))
+            current = part
+
+        if current:
+            chunks.extend(split_recursive(current, separator_index + 1))
+
+        if overlap <= 0 or len(chunks) <= 1:
+            return chunks
+
+        overlapped: list[str] = []
+        previous_tail = ""
+        for chunk in chunks:
+            combined = f"{previous_tail} {chunk}".strip() if previous_tail else chunk
+            overlapped.append(combined[: chunk_size + overlap].strip())
+            previous_tail = chunk[-overlap:]
+
+        return overlapped
+
+    return split_recursive(text)
+
+
 def make_chunks(pages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     chunks: list[dict[str, Any]] = []
 
     for page in pages:
-        page_chunks = chunk_words(page["text"])
+        page_chunks = recursive_chunk_text(page["text"])
         for chunk_number, chunk_text in enumerate(page_chunks, start=1):
             chunks.append({
                 "id": len(chunks),
@@ -262,6 +320,8 @@ def build_rag_backend(api_key: str, pdf_path_str: str):
         "pdf_name": pdf_path.name,
         "total_pages": len(pages),
         "total_chunks": len(chunks),
+        "chunk_size": CHUNK_SIZE,
+        "chunk_overlap": CHUNK_OVERLAP,
         "embedding_model": embedding_model,
         "embedding_dimension": int(embeddings.shape[1]),
     }
@@ -314,30 +374,34 @@ def generate_answer(
     )
 
     prompt = f"""
-Konteks dokumen:
+Konteks dokumen kompilasi website LaC Telkom University:
 {context_text}
 
 Pertanyaan pengguna:
 {question}
 
 Instruksi jawaban:
-- Jawab berdasarkan konteks dokumen di atas.
-- Jika informasi tidak ada di konteks, sampaikan bahwa informasi tersebut belum tersedia pada dokumen.
+- Jawablah pertanyaan dengan sejelas dan sedetail mungkin berdasarkan konteks yang diberikan.
+- Jika jawaban tidak ada dalam konteks, cukup katakan: "Jawaban tidak tersedia dalam konteks dokumen."
+- Jangan memberikan jawaban yang salah atau mengarang informasi di luar konteks.
+- Gunakan poin-poin ringkas jika jawabannya berisi daftar layanan, jadwal, syarat, kontak, atau langkah.
 - Akhiri jawaban dengan bagian "Sumber" yang menyebutkan halaman dokumen yang digunakan.
 """.strip()
 
     model = get_config_value("GEMINI_MODEL", DEFAULT_GENERATION_MODEL)
 
     try:
-        interaction = client.interactions.create(
+        response = client.models.generate_content(
             model=model,
-            system_instruction=SYSTEM_INSTRUCTION,
-            input=prompt,
-            generation_config={
-                "temperature": 0.2,
-            },
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_INSTRUCTION,
+                temperature=0.2,
+                top_p=0.95,
+                top_k=20,
+            ),
         )
-        return interaction.output_text
+        return response.text or "Jawaban tidak tersedia dalam konteks dokumen."
     except Exception as exc:
         raise RuntimeError(
             "Gagal membuat jawaban dari Gemini. "
@@ -350,7 +414,7 @@ Instruksi jawaban:
 # ============================================================
 
 st.set_page_config(
-    page_title="Chatbot EPrT LaC",
+    page_title="Chatbot LaC Telkom University",
     page_icon="E",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -528,7 +592,7 @@ if not api_key:
         """
         <div class="hero">
             <div class="eyebrow">Konfigurasi dibutuhkan</div>
-            <h1>Chatbot Panduan EPrT</h1>
+            <h1>Chatbot Informasi LaC</h1>
             <p>GEMINI_API_KEY belum tersedia di backend. Tambahkan GEMINI_API_KEY di Streamlit Secrets atau environment variable.</p>
         </div>
         """,
@@ -544,8 +608,8 @@ except Exception as exc:
     st.stop()
 
 with st.sidebar:
-    st.markdown("### Chatbot EPrT")
-    st.caption("Asisten berbasis dokumen panduan LaC Telkom University.")
+    st.markdown("### Chatbot LaC")
+    st.caption("Asisten berbasis kompilasi informasi website LaC Telkom University.")
     st.divider()
 
     if st.button("Bersihkan percakapan", use_container_width=True):
@@ -557,8 +621,8 @@ if "messages" not in st.session_state or not st.session_state.messages:
         {
             "role": "assistant",
             "content": (
-                "Halo, saya chatbot panduan EPrT. "
-                "Silakan tanyakan informasi tentang pendaftaran, persiapan, pelaksanaan, atau hasil tes EPrT."
+                "Halo, saya chatbot informasi LaC Telkom University. "
+                "Silakan tanyakan informasi tentang layanan tes bahasa, kursus, terjemahan, FAQ, kontak, atau informasi lain yang tersedia di dokumen."
             ),
         }
     ]
@@ -566,18 +630,18 @@ if "messages" not in st.session_state or not st.session_state.messages:
 st.markdown(
     """
     <div class="hero">
-        <div class="eyebrow">EPrT LaC Telkom University</div>
-        <h1>Chatbot Panduan EPrT</h1>
-        <p>Tanyakan informasi seputar pendaftaran, persiapan, pelaksanaan, hasil tes, dan ketentuan lain yang tersedia di dokumen panduan.</p>
+        <div class="eyebrow">Telkom University Language Center</div>
+        <h1>Chatbot Informasi LaC</h1>
+        <p>Tanyakan informasi seputar layanan tes bahasa, kursus bahasa, terjemahan, FAQ, kontak, berita, dan layanan lain yang tersedia di dokumen kompilasi website LaC.</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 suggested_questions = [
-    "Bagaimana cara mendaftar tes EPrT?",
-    "Apa saja yang perlu dipersiapkan sebelum tes?",
-    "Bagaimana cara melihat hasil tes EPrT?",
+    "Apa saja layanan yang tersedia di LaC?",
+    "Bagaimana informasi tes EPrT di LaC?",
+    "Apa kontak atau kanal resmi LaC?",
 ]
 
 if "draft_question" not in st.session_state:
@@ -621,7 +685,7 @@ if question:
                     chunks=chunks,
                     metadata=metadata,
                     query=question,
-                    top_k=4,
+                    top_k=RETRIEVAL_TOP_K,
                 )
                 answer = generate_answer(
                     client=client,
