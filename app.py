@@ -1,3 +1,4 @@
+import html
 import os
 import re
 import time
@@ -350,39 +351,221 @@ Instruksi jawaban:
 
 st.set_page_config(
     page_title="Chatbot EPrT LaC",
-    page_icon="💬",
-    layout="centered",
+    page_icon="E",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-st.title("💬 Chatbot Panduan EPrT")
-st.caption("Tanyakan informasi terkait pendaftaran, persiapan, pelaksanaan, atau hasil tes EPrT.")
+st.markdown(
+    """
+    <style>
+        :root {
+            --brand: #b42318;
+            --ink: #182230;
+            --muted: #667085;
+            --line: #e4e7ec;
+        }
+
+        .stApp {
+            background: linear-gradient(180deg, #fff8e8 0%, #ffffff 34%, #f8fafc 100%);
+            color: var(--ink);
+        }
+
+        [data-testid="stHeader"] {
+            background: rgba(255, 248, 232, 0.78);
+            backdrop-filter: blur(12px);
+        }
+
+        section[data-testid="stSidebar"] {
+            background: #ffffff;
+            border-right: 1px solid var(--line);
+        }
+
+        .block-container {
+            max-width: 1120px;
+            padding-top: 2rem;
+            padding-bottom: 6rem;
+        }
+
+        .hero {
+            border: 1px solid #ffd2cc;
+            border-radius: 8px;
+            padding: 1.4rem 1.5rem;
+            background:
+                linear-gradient(135deg, rgba(255, 241, 239, 0.96), rgba(255, 248, 232, 0.92)),
+                radial-gradient(circle at 82% 10%, rgba(180, 35, 24, 0.14), transparent 34%);
+            box-shadow: 0 16px 40px rgba(16, 24, 40, 0.08);
+            margin-bottom: 1rem;
+        }
+
+        .eyebrow {
+            color: var(--brand);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: uppercase;
+            margin-bottom: 0.35rem;
+        }
+
+        .hero h1 {
+            color: var(--ink);
+            font-size: clamp(2rem, 4vw, 3.15rem);
+            line-height: 1.05;
+            margin: 0;
+        }
+
+        .hero p {
+            color: #475467;
+            font-size: 1.02rem;
+            margin: 0.75rem 0 0;
+            max-width: 760px;
+        }
+
+        .info-strip {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin: 1rem 0 1.25rem;
+        }
+
+        .info-tile {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.88);
+            padding: 0.85rem 1rem;
+        }
+
+        .info-tile span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .info-tile strong {
+            color: var(--ink);
+            font-size: 1rem;
+        }
+
+        .section-label {
+            color: #344054;
+            font-size: 0.88rem;
+            font-weight: 700;
+            margin: 1.1rem 0 0.45rem;
+        }
+
+        div[data-testid="stChatMessage"] {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
+            padding: 0.3rem;
+        }
+
+        div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+            background: #fffaf2;
+            border-color: #fedf89;
+        }
+
+        .source-card {
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--brand);
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .source-card strong {
+            color: var(--ink);
+        }
+
+        .source-card p {
+            color: #475467;
+            margin: 0.45rem 0 0;
+            line-height: 1.55;
+        }
+
+        .stButton > button {
+            border-radius: 8px;
+            border-color: #fda29b;
+            color: #912018;
+            background: #fff7f5;
+            min-height: 2.55rem;
+            white-space: normal;
+        }
+
+        .stButton > button:hover {
+            border-color: var(--brand);
+            color: var(--brand);
+            background: #fff1ef;
+        }
+
+        [data-testid="stChatInput"] {
+            border-radius: 8px;
+        }
+
+        @media (max-width: 760px) {
+            .block-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .hero {
+                padding: 1.1rem;
+            }
+
+            .info-strip {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 api_key = get_config_value("GEMINI_API_KEY")
 pdf_path = get_pdf_path()
 
 if not api_key:
-    st.error(
-        "GEMINI_API_KEY belum tersedia di backend. "
-        "Tambahkan GEMINI_API_KEY di Streamlit Secrets atau environment variable."
+    st.markdown(
+        """
+        <div class="hero">
+            <div class="eyebrow">Konfigurasi dibutuhkan</div>
+            <h1>Chatbot Panduan EPrT</h1>
+            <p>GEMINI_API_KEY belum tersedia di backend. Tambahkan GEMINI_API_KEY di Streamlit Secrets atau environment variable.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
     st.stop()
 
 try:
-    with st.spinner("Menyiapkan knowledge base dokumen..."):
+    with st.spinner("Menyiapkan knowledge base dari dokumen panduan..."):
         client, index, chunks, metadata = build_rag_backend(api_key, str(pdf_path))
 except Exception as exc:
     st.error(str(exc))
     st.stop()
 
-with st.sidebar:
-    st.subheader("Knowledge Base")
-    st.write(f"Dokumen: `{metadata['pdf_name']}`")
-    st.write(f"Halaman terbaca: {metadata['total_pages']}")
-    st.write(f"Jumlah chunk: {metadata['total_chunks']}")
-    st.write(f"Model embedding: `{metadata['embedding_model']}`")
-    st.write(f"Model generasi: `{get_config_value('GEMINI_MODEL', DEFAULT_GENERATION_MODEL)}`")
+generation_model = get_config_value("GEMINI_MODEL", DEFAULT_GENERATION_MODEL)
+safe_pdf_name = html.escape(metadata["pdf_name"])
 
-    if st.button("Bersihkan percakapan"):
+with st.sidebar:
+    st.markdown("### Chatbot EPrT")
+    st.caption("Asisten berbasis dokumen panduan LaC Telkom University.")
+
+    st.markdown("#### Knowledge Base")
+    st.metric("Halaman terbaca", metadata["total_pages"])
+    st.metric("Potongan konteks", metadata["total_chunks"])
+
+    st.markdown("#### Detail Sistem")
+    st.write(f"Dokumen: `{metadata['pdf_name']}`")
+    st.write(f"Embedding: `{metadata['embedding_model']}`")
+    st.write(f"Generasi: `{generation_model}`")
+
+    st.divider()
+
+    if st.button("Bersihkan percakapan", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
 
@@ -397,11 +580,63 @@ if "messages" not in st.session_state or not st.session_state.messages:
         }
     ]
 
+st.markdown(
+    """
+    <div class="hero">
+        <div class="eyebrow">EPrT LaC Telkom University</div>
+        <h1>Chatbot Panduan EPrT</h1>
+        <p>Tanyakan informasi seputar pendaftaran, persiapan, pelaksanaan, hasil tes, dan ketentuan lain yang tersedia di dokumen panduan.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    f"""
+    <div class="info-strip">
+        <div class="info-tile">
+            <span>Dokumen aktif</span>
+            <strong>{safe_pdf_name}</strong>
+        </div>
+        <div class="info-tile">
+            <span>Cakupan dokumen</span>
+            <strong>{metadata['total_pages']} halaman</strong>
+        </div>
+        <div class="info-tile">
+            <span>Mode jawaban</span>
+            <strong>Berbasis sumber</strong>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+suggested_questions = [
+    "Bagaimana cara mendaftar tes EPrT?",
+    "Apa saja yang perlu dipersiapkan sebelum tes?",
+    "Bagaimana cara melihat hasil tes EPrT?",
+]
+
+if "draft_question" not in st.session_state:
+    st.session_state.draft_question = ""
+
+st.markdown('<div class="section-label">Contoh pertanyaan</div>', unsafe_allow_html=True)
+cols = st.columns(len(suggested_questions))
+for col, sample in zip(cols, suggested_questions):
+    with col:
+        if st.button(sample, use_container_width=True):
+            st.session_state.draft_question = sample
+
+st.markdown('<div class="section-label">Percakapan</div>', unsafe_allow_html=True)
+
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
 question = st.chat_input("Tulis pertanyaan Anda di sini...")
+if not question and st.session_state.draft_question:
+    question = st.session_state.draft_question
+    st.session_state.draft_question = ""
 
 if question:
     st.session_state.messages.append({
@@ -413,7 +648,9 @@ if question:
         st.markdown(question)
 
     with st.chat_message("assistant"):
-        with st.spinner("Mencari jawaban dari dokumen..."):
+        contexts = []
+
+        with st.spinner("Mencari jawaban paling relevan dari dokumen..."):
             try:
                 contexts = retrieve_contexts(
                     client=client,
@@ -433,14 +670,22 @@ if question:
 
             st.markdown(answer)
 
-            with st.expander("Potongan dokumen yang digunakan", expanded=False):
+            with st.expander("Lihat potongan dokumen yang digunakan", expanded=False):
                 if contexts:
                     for ctx in contexts:
-                        st.markdown(f"**Halaman {ctx['page']} — skor {ctx['score']:.3f}**")
                         preview = ctx["text"][:900]
                         if len(ctx["text"]) > 900:
                             preview += "..."
-                        st.write(preview)
+                        safe_preview = html.escape(preview)
+                        st.markdown(
+                            f"""
+                            <div class="source-card">
+                                <strong>Halaman {ctx['page']} - skor {ctx['score']:.3f}</strong>
+                                <p>{safe_preview}</p>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
                 else:
                     st.write("Tidak ada konteks yang ditemukan.")
 
