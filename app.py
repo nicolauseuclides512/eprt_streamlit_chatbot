@@ -360,24 +360,30 @@ st.markdown(
     """
     <style>
         :root {
-            --brand: #b42318;
-            --ink: #182230;
-            --muted: #667085;
-            --line: #e4e7ec;
+            --brand: #d71920;
+            --brand-deep: #8f1117;
+            --gold: #f5b335;
+            --ink: #f8fafc;
+            --muted: #a6b0c3;
+            --line: rgba(255, 255, 255, 0.12);
+            --panel: rgba(15, 23, 42, 0.88);
+            --panel-soft: rgba(30, 41, 59, 0.74);
         }
 
         .stApp {
-            background: linear-gradient(180deg, #fff8e8 0%, #ffffff 34%, #f8fafc 100%);
+            background:
+                linear-gradient(180deg, #090d18 0%, #101827 48%, #121826 100%);
             color: var(--ink);
         }
 
         [data-testid="stHeader"] {
-            background: rgba(255, 248, 232, 0.78);
+            background: rgba(9, 13, 24, 0.78);
             backdrop-filter: blur(12px);
         }
 
         section[data-testid="stSidebar"] {
-            background: #ffffff;
+            background:
+                linear-gradient(180deg, #111827 0%, #0b1120 100%);
             border-right: 1px solid var(--line);
         }
 
@@ -388,18 +394,18 @@ st.markdown(
         }
 
         .hero {
-            border: 1px solid #ffd2cc;
+            border: 1px solid rgba(245, 179, 53, 0.32);
             border-radius: 8px;
             padding: 1.4rem 1.5rem;
             background:
-                linear-gradient(135deg, rgba(255, 241, 239, 0.96), rgba(255, 248, 232, 0.92)),
-                radial-gradient(circle at 82% 10%, rgba(180, 35, 24, 0.14), transparent 34%);
-            box-shadow: 0 16px 40px rgba(16, 24, 40, 0.08);
+                linear-gradient(135deg, rgba(143, 17, 23, 0.92), rgba(17, 24, 39, 0.94) 58%),
+                radial-gradient(circle at 84% 12%, rgba(245, 179, 53, 0.24), transparent 34%);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
             margin-bottom: 1rem;
         }
 
         .eyebrow {
-            color: var(--brand);
+            color: var(--gold);
             font-size: 0.78rem;
             font-weight: 700;
             letter-spacing: 0;
@@ -415,40 +421,14 @@ st.markdown(
         }
 
         .hero p {
-            color: #475467;
+            color: #d7dde8;
             font-size: 1.02rem;
             margin: 0.75rem 0 0;
             max-width: 760px;
         }
 
-        .info-strip {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 0.75rem;
-            margin: 1rem 0 1.25rem;
-        }
-
-        .info-tile {
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.88);
-            padding: 0.85rem 1rem;
-        }
-
-        .info-tile span {
-            display: block;
-            color: var(--muted);
-            font-size: 0.8rem;
-            margin-bottom: 0.15rem;
-        }
-
-        .info-tile strong {
-            color: var(--ink);
-            font-size: 1rem;
-        }
-
         .section-label {
-            color: #344054;
+            color: #f4f7fb;
             font-size: 0.88rem;
             font-weight: 700;
             margin: 1.1rem 0 0.45rem;
@@ -457,21 +437,21 @@ st.markdown(
         div[data-testid="stChatMessage"] {
             border: 1px solid var(--line);
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
+            background: var(--panel);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
             padding: 0.3rem;
         }
 
         div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-            background: #fffaf2;
-            border-color: #fedf89;
+            background: rgba(143, 17, 23, 0.42);
+            border-color: rgba(245, 179, 53, 0.38);
         }
 
         .source-card {
             border: 1px solid var(--line);
-            border-left: 4px solid var(--brand);
+            border-left: 4px solid var(--gold);
             border-radius: 8px;
-            background: #ffffff;
+            background: var(--panel-soft);
             padding: 0.85rem 1rem;
             margin-bottom: 0.75rem;
         }
@@ -481,28 +461,48 @@ st.markdown(
         }
 
         .source-card p {
-            color: #475467;
+            color: #cbd5e1;
             margin: 0.45rem 0 0;
             line-height: 1.55;
         }
 
+        div[data-testid="stExpander"] {
+            border-color: var(--line);
+            background: rgba(15, 23, 42, 0.66);
+            border-radius: 8px;
+        }
+
         .stButton > button {
             border-radius: 8px;
-            border-color: #fda29b;
-            color: #912018;
-            background: #fff7f5;
+            border-color: rgba(245, 179, 53, 0.42);
+            color: #fff7d6;
+            background: linear-gradient(135deg, rgba(143, 17, 23, 0.92), rgba(96, 16, 20, 0.86));
             min-height: 2.55rem;
             white-space: normal;
         }
 
         .stButton > button:hover {
-            border-color: var(--brand);
-            color: var(--brand);
-            background: #fff1ef;
+            border-color: var(--gold);
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--brand), var(--brand-deep));
         }
 
         [data-testid="stChatInput"] {
             border-radius: 8px;
+        }
+
+        [data-testid="stChatInput"] textarea {
+            background: #0f172a;
+            color: var(--ink);
+            border-color: rgba(245, 179, 53, 0.26);
+        }
+
+        .stMarkdown, .stCaption, p, li, label {
+            color: #dce3ee;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: #ffffff;
         }
 
         @media (max-width: 760px) {
@@ -513,10 +513,6 @@ st.markdown(
 
             .hero {
                 padding: 1.1rem;
-            }
-
-            .info-strip {
-                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -547,22 +543,9 @@ except Exception as exc:
     st.error(str(exc))
     st.stop()
 
-generation_model = get_config_value("GEMINI_MODEL", DEFAULT_GENERATION_MODEL)
-safe_pdf_name = html.escape(metadata["pdf_name"])
-
 with st.sidebar:
     st.markdown("### Chatbot EPrT")
     st.caption("Asisten berbasis dokumen panduan LaC Telkom University.")
-
-    st.markdown("#### Knowledge Base")
-    st.metric("Halaman terbaca", metadata["total_pages"])
-    st.metric("Potongan konteks", metadata["total_chunks"])
-
-    st.markdown("#### Detail Sistem")
-    st.write(f"Dokumen: `{metadata['pdf_name']}`")
-    st.write(f"Embedding: `{metadata['embedding_model']}`")
-    st.write(f"Generasi: `{generation_model}`")
-
     st.divider()
 
     if st.button("Bersihkan percakapan", use_container_width=True):
@@ -586,26 +569,6 @@ st.markdown(
         <div class="eyebrow">EPrT LaC Telkom University</div>
         <h1>Chatbot Panduan EPrT</h1>
         <p>Tanyakan informasi seputar pendaftaran, persiapan, pelaksanaan, hasil tes, dan ketentuan lain yang tersedia di dokumen panduan.</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-st.markdown(
-    f"""
-    <div class="info-strip">
-        <div class="info-tile">
-            <span>Dokumen aktif</span>
-            <strong>{safe_pdf_name}</strong>
-        </div>
-        <div class="info-tile">
-            <span>Cakupan dokumen</span>
-            <strong>{metadata['total_pages']} halaman</strong>
-        </div>
-        <div class="info-tile">
-            <span>Mode jawaban</span>
-            <strong>Berbasis sumber</strong>
-        </div>
     </div>
     """,
     unsafe_allow_html=True,
