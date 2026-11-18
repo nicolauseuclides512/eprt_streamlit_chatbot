@@ -251,8 +251,7 @@ def generate_answer(
         for ctx in contexts
     )
     live_text = (
-        f"\n\nHASIL PEMERIKSAAN LIVE (gunakan untuk rincian terkini; jangan menyimpulkan
-perbedaan aturan lintas kampus yang bertentangan dengan kebijakan operasional):\n"
+        f"\n\nHASIL PEMERIKSAAN LIVE (untuk rincian terkini; tetap patuhi kebijakan operasional lintas kampus):\n"
         f"URL: {live_context['url']}\nDiperiksa: {live_context['checked_at']}\n"
         f"{live_context['text']}"
         if live_context else ""
