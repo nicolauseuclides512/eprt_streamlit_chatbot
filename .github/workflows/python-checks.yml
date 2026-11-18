@@ -19,15 +19,23 @@ jobs:
         run: python -m compileall -q app.py web_knowledge.py tests
       - name: Unit tests
         run: python -m unittest discover -s tests -v
-      - name: Live source smoke check (non-blocking)
+      - name: Live public source smoke check (non-blocking)
         continue-on-error: true
         run: |
           python - <<'PY'
           import requests
           from web_knowledge import fetch_page, load_sources
-          sources = load_sources()
-          source = next(item for item in sources if item["topic"] == "EPrT")
+          failed = []
+          robots_cache = {}
           with requests.Session() as session:
-              document = fetch_page(source, session, {})
-          print(f"Official source fetched: {document['url']}; {len(document['text'])} characters")
+              for source in load_sources():
+                  try:
+                      document = fetch_page(source, session, robots_cache)
+                      print(f"OK {source['topic']}: {document['url']} ({len(document['text'])} chars)")
+                  except Exception as exc:
+                      failed.append(source['url'])
+                      print(f"UNAVAILABLE {source['topic']}: {type(exc).__name__} {source['url']}")
+          print(f"Results: {len(load_sources()) - len(failed)} successful / {len(load_sources())} total.")
+          if failed:
+              raise SystemExit("Some live sources unavailable; check before production.")
           PY
