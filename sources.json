@@ -1,0 +1,60 @@
+{
+  "sources": [
+    {
+      "url": "https://lac.telkomuniversity.ac.id/",
+      "title": "Beranda Language Center",
+      "topic": "Umum",
+      "campus": "Lintas kampus",
+      "dynamic": false
+    },
+    {
+      "url": "https://lac.telkomuniversity.ac.id/layanan/tes-bahasa/",
+      "title": "Layanan tes bahasa",
+      "topic": "Tes bahasa",
+      "campus": "Lintas kampus",
+      "dynamic": true
+    },
+    {
+      "url": "https://lac.telkomuniversity.ac.id/layanan/tes-bahasa/eprt/",
+      "title": "Panduan EPrT",
+      "topic": "EPrT",
+      "campus": "Lintas kampus",
+      "dynamic": true
+    },
+    {
+      "url": "https://lac.telkomuniversity.ac.id/kursus-bahasa/",
+      "title": "Layanan kursus bahasa",
+      "topic": "Kursus",
+      "campus": "Lintas kampus",
+      "dynamic": true
+    },
+    {
+      "url": "https://lac.telkomuniversity.ac.id/layanan/jasa-terjemahan-proofreading/",
+      "title": "Terjemahan dan proofreading",
+      "topic": "Terjemahan",
+      "campus": "Lintas kampus",
+      "dynamic": true
+    },
+    {
+      "url": "https://lac.telkomuniversity.ac.id/ssd/",
+      "title": "Soal sering ditanya",
+      "topic": "FAQ",
+      "campus": "Lintas kampus",
+      "dynamic": true
+    },
+    {
+      "url": "https://lac.telkomuniversity.ac.id/hubungi-kami/",
+      "title": "Kontak",
+      "topic": "Kontak",
+      "campus": "Lintas kampus",
+      "dynamic": true
+    },
+    {
+      "url": "https://lac.telkomuniversity.ac.id/eprt-mahasiswa-baru/",
+      "title": "EPrT mahasiswa baru",
+      "topic": "EPrT Maba",
+      "campus": "Lintas kampus",
+      "dynamic": true
+    }
+  ]
+}
