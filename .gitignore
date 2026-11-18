@@ -1,14 +1,11 @@
-# Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 env/
-
-# Streamlit secrets
+.cache/
+.pytest_cache/
 .streamlit/secrets.toml
-
-# OS/editor
 .DS_Store
 .vscode/
 .idea/
