@@ -19,3 +19,15 @@ jobs:
         run: python -m compileall -q app.py web_knowledge.py tests
       - name: Unit tests
         run: python -m unittest discover -s tests -v
+      - name: Live source smoke check (non-blocking)
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import requests
+          from web_knowledge import fetch_page, load_sources
+          sources = load_sources()
+          source = next(item for item in sources if item["topic"] == "EPrT")
+          with requests.Session() as session:
+              document = fetch_page(source, session, {})
+          print(f"Official source fetched: {document['url']}; {len(document['text'])} characters")
+          PY
