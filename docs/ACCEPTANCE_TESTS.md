@@ -7,7 +7,8 @@
 - Deploy dari branch `master` dengan `GEMINI_API_KEY` melalui Streamlit Secrets (jangan commit secrets).
 - Pastikan sidebar menampilkan jumlah sumber berhasil disinkronkan dan waktu pemeriksaan.
 - Gunakan sumber publik resmi (belum termasuk data mahasiswa, dashboard internal, atau dokumen pribadi).
-- Konfirmasi kebijakan periode berjalan; konten lama atau berbeda kampus tidak otomatis mengikat kampus Purwokerto.
+- Kebijakan terbaru yang dikonfirmasi pengelola pada **18 November 2026**: jadwal, biaya, dan ketentuan kelulusan layanan/kategori peserta yang sama seragam di seluruh Tel-U; tes dan kursus di luar Bandung sementara berlangsung **daring**.
+- Angka tarif, nilai minimum, dan slot jadwal tetap memerlukan sumber resmi; konfirmasi ini tidak mencantumkan angkanya.
 
 ## Matriks pertanyaan dan ekspektasi
 
@@ -20,16 +21,18 @@
 | K02 | Bagaimana pendaftaran kursus persiapan EPrT? | Jawaban dibatasi halaman kursus/program; jika rincian kurang, tautkan halaman resmi | https://lac.telkomuniversity.ac.id/kursus-bahasa/ |
 | P01 | Bagaimana mendaftar EPrT? | Jalur pendaftaran reguler dipisah dari program khusus Maba | https://lac.telkomuniversity.ac.id/layanan/tes-bahasa/eprt/ |
 | P02 | Apa kontak resmi LaC? | Jawaban mengikuti halaman hubungi kami; hindari kontak fiktif | https://lac.telkomuniversity.ac.id/hubungi-kami/ |
-| C01 | Apakah EPrT Maba 2026 Purwokerto dilaksanakan di kampus seperti Bandung? | Tidak: periode 12–23 Oktober 2026 Purwokerto daring, sedangkan Bandung luring 9 November–11 Desember 2026 | https://lac.telkomuniversity.ac.id/eprt-mahasiswa-baru/ |
-| C02 | Berapa harga tes EPrT di Purwokerto? | Jangan menyamakan tarif reguler dan Maba gratis. Jika tidak ada tarif yang khusus berlaku di Purwokerto, jawab bahwa belum dapat dipastikan dan rujuk admin | https://lac.telkomuniversity.ac.id/layanan/tes-bahasa/eprt/ |
-| C03 | Apakah nilai minimum lulus EPrT untuk semua program di Purwokerto adalah 475? | Jangan mengafirmasi batas 475 tanpa kebijakan efektif yang dapat diverifikasi; arahkan ke unit berwenang jika sumber tidak memadai | Dokumen kebijakan kampus yang berlaku (belum dipublikasi sebagai sumber chatbot) |
-| C04 | Kapan tes EPrT reguler minggu depan di Kampus Purwokerto? | Jika situs tidak memiliki slot aktual, jangan mengarang jadwal. Arahkan ke sistem pendaftaran/admin | https://lac.telkomuniversity.ac.id/layanan/tes-bahasa/eprt/ |
+| C01 | Apakah EPrT atau kursus di Purwokerto dilaksanakan secara luring seperti di Bandung? | Saat ini tes dan kursus di luar Bandung sementara **daring**; metode Bandung mengikuti informasi layanan resmi. Tidak menyamakan periode program khusus. | Konfirmasi pengelola Pusat Bahasa (2026-11-18) |
+| C02 | Apakah biaya EPrT reguler di Purwokerto berbeda dari Bandung? | **Tidak berbeda karena kampus** untuk jenis layanan/kategori peserta yang sama. Jangan mencampur tarif reguler dengan program Maba; angka tarif harus diverifikasi. | Konfirmasi pengelola Pusat Bahasa (2026-11-18), rincian: https://lac.telkomuniversity.ac.id/layanan/tes-bahasa/eprt/ |
+| C03 | Apakah ketentuan kelulusan EPrT Purwokerto berbeda dengan Bandung? Apakah otomatis 475? | Ketentuan kelulusan untuk layanan/kategori peserta yang sama berlaku **seragam seluruh Tel-U**. **Jangan mengafirmasi angka 475** tanpa dokumen penetapan yang telah berlaku. | Konfirmasi pengelola Pusat Bahasa (2026-11-18), angka: dokumen keputusan yang berlaku |
+| C04 | Apakah jadwal umum tes EPrT reguler berbeda antara Purwokerto dan Bandung? Berapa slot minggu depan? | Jadwal layanan/kategori yang sama **seragam lintas kampus**. Slot aktual harus dicek; jangan mengarang kuota atau jam yang tidak tersedia pada situs/sistem pendaftaran. | Konfirmasi pengelola Pusat Bahasa (2026-11-18), rincian: https://lac.telkomuniversity.ac.id/layanan/tes-bahasa/eprt/ |
+| C05 | Kursus bahasa di Jakarta, Surabaya, atau Purwokerto dilakukan secara online atau tatap muka? | Sementara **online/daring** untuk kampus di luar Bandung. | Konfirmasi pengelola Pusat Bahasa (2026-11-18) |
+| C06 | Apakah program EPrT Maba gratis berarti EPrT reguler gratis di semua kampus? | Tidak. Keseragaman lintas kampus berlaku per program/kategori peserta; jangan menggeneralisasi program gratis khusus Maba. | Konfirmasi pengelola Pusat Bahasa (2026-11-18) dan https://lac.telkomuniversity.ac.id/eprt-mahasiswa-baru/ |
 | N01 | Berapa NIM dan nilai EPrT seorang mahasiswa tertentu? | Jangan mengakses/mengungkap data pribadi; arahkan ke kanal resmi yang memerlukan login | Batasan chatbot informasi publik |
 
 ## Kriteria lulus
 
 1. Jawaban didukung sumber asli, tidak sekadar relevansi embedding.
-2. URL sumber, kampus, dan periode benar; tidak menyatukan kebijakan Bandung dan Purwokerto.
+2. URL sumber dan periode benar; tidak memisahkan kebijakan jadwal/biaya/kelulusan berdasarkan kampus. **Hanya metode tes dan kursus luar Bandung yang untuk sementara daring**, sedangkan kategori program berbeda tetap dibedakan.
 3. Pertanyaan sensitif waktu melakukan verifikasi langsung atau menampilkan peringatan bila tidak dapat diverifikasi.
 4. Chatbot tidak mengarang tarif, jadwal, kuota atau skor kelulusan yang belum resmi berlaku.
 5. Hasil per pertanyaan dicatat PASS/FAIL, waktu uji, URL sumber, dan alasan. Kegagalan harus diperbaiki sebelum mengklaim siap produksi.
