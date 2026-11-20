@@ -17,6 +17,7 @@ from google.genai import types
 import web_knowledge
 from institutional_policy import POLICY_TEXT, SOURCE, CONFIRMED_AT, policy_related
 from diagnostics import friendly_error
+from gemini_client import create_gemini_client
 
 APP_DIR = Path(__file__).resolve().parent
 DEFAULT_GENERATION_MODEL = "gemini-2.5-flash"
@@ -195,7 +196,7 @@ def build_rag_backend(api_key: str, sources_path: str, refresh_hours: float):
     if not chunks:
         raise ValueError("Konten sumber web belum tersedia untuk chatbot")
 
-    client = genai.Client(api_key=api_key)
+    client = create_gemini_client(api_key)
     embedding_model = choose_embedding_model(client)
     embeddings = embed_cached_texts(
         client, [item["text"] for item in chunks],
