@@ -11,6 +11,7 @@ import logging
 import os
 import re
 import secrets
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -25,6 +26,8 @@ import web_knowledge
 SCHEMA_VERSION = 1
 EMBEDDING_DIMENSION = 768
 DEFAULT_EMBEDDING_MODEL = "gemini-embedding-001"
+DEFAULT_EMBED_ITEMS_PER_MINUTE = 60
+DEFAULT_MAX_QUOTA_RETRIES = 3
 DEFAULT_INDEX_DIR = web_knowledge.DEFAULT_CACHE_DIR / "precomputed"
 CHUNK_SIZE = 950
 CHUNK_OVERLAP = 100
@@ -144,11 +147,85 @@ def embed_texts(client: Any, texts: list[str], model: str, task: str) -> list[li
     return [list(map(float, vector)) for vector in vectors]
 
 
-def cached_document_embeddings(client: Any, chunks: list[dict], model: str,
-                               cache_dir: Path, batch_size: int = 8) -> np.ndarray:
-    """Cache incremental per batch; menyimpan progres jika proses terputus."""
+def _quota_retry_delay(exc: Exception) -> float | None:
+    """Extract RetryInfo from formatted Gemini exception without SDK internals."""
+    message = str(exc)
+    for pattern in (
+        r"Please retry in\s+(\d+(?:\.\d+)?)s",
+        r"retryDelay['\"]?\s*:\s*['\"]?(\d+(?:\.\d+)?)s",
+    ):
+        match = re.search(pattern, message, re.IGNORECASE)
+        if match:
+            return float(match.group(1))
+    return None
+
+
+def _is_rate_limit(exc: Exception) -> bool:
+    for attr in ("code", "status_code"):
+        try:
+            if int(getattr(exc, attr, 0)) == 429:
+                return True
+        except (ValueError, TypeError):
+            pass
+    return "429" in str(exc) and "RESOURCE_EXHAUSTED" in str(exc)
+
+
+def _is_daily_quota(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return (
+        "per day" in text or "perday" in text or
+        "requests per day" in text or "daily limit" in text
+    ) and _quota_retry_delay(exc) is None
+
+
+def embed_with_quota_retry(
+    client: Any, texts: list[str], model: str, task: str,
+    max_retries: int = DEFAULT_MAX_QUOTA_RETRIES,
+) -> list[list[float]]:
+    """Respect RetryInfo for per-minute 429; preserve successful cache batches."""
+    if max_retries < 0 or max_retries > 10:
+        raise ValueError("max_retries harus 0–10")
+    for attempt in range(max_retries + 1):
+        try:
+            return embed_texts(client, texts, model, task)
+        except Exception as exc:
+            if not _is_rate_limit(exc):
+                raise
+            if _is_daily_quota(exc):
+                raise RuntimeError(
+                    "Kuota embedding harian Gemini telah habis; cache yang berhasil "
+                    "tetap tersimpan. Periksa kuota harian proyek di Google AI Studio."
+                ) from exc
+            if attempt >= max_retries:
+                raise RuntimeError(
+                    "Batas embedding Gemini masih terlampaui setelah retry; "
+                    "cache yang berhasil tetap tersimpan. Kurangi --embed-rpm "
+                    "atau lanjutkan indexing setelah kuota tersedia."
+                ) from exc
+            retry_info = _quota_retry_delay(exc)
+            delay = max(retry_info if retry_info is not None
+                        else min(15 * (2 ** attempt), 180), 1) + 2
+            logging.warning(
+                "Gemini 429 (RPM); retry %d/%d setelah jeda %.1f detik.",
+                attempt + 1, max_retries, delay,
+            )
+            time.sleep(delay)
+    raise AssertionError("unreachable")
+
+
+def cached_document_embeddings(
+    client: Any, chunks: list[dict], model: str, cache_dir: Path,
+    batch_size: int = 8,
+    embed_rpm: int = DEFAULT_EMBED_ITEMS_PER_MINUTE,
+    max_quota_retries: int = DEFAULT_MAX_QUOTA_RETRIES,
+) -> np.ndarray:
+    """Throttle berdasarkan jumlah TEKS (bukan hanya HTTP call); save per batch."""
     if not 1 <= batch_size <= 50:
         raise ValueError("batch_size harus 1–50")
+    if not batch_size <= embed_rpm <= 600:
+        raise ValueError("embed_rpm harus >= batch_size dan <= 600")
+    if not chunks:
+        raise ValueError("Tidak ada potongan dokumen yang akan diindeks")
     cache_key = f"{model}@{EMBEDDING_DIMENSION}"
     cache = web_knowledge.load_embedding_cache(cache_dir, cache_key)
     keys = [hashlib.sha256(item["text"].encode("utf-8")).hexdigest() for item in chunks]
@@ -158,20 +235,32 @@ def cached_document_embeddings(client: Any, chunks: list[dict], model: str,
         if vector is None or len(vector) != EMBEDDING_DIMENSION:
             missing.setdefault(key, item["text"])
     pending = list(missing.items())
+    logging.info(
+        "Embedding cache: %d/%d teks unik tersedia, %d belum di-embedding.",
+        len(set(keys)) - len(pending), len(set(keys)), len(pending),
+    )
+    next_request_at = 0.0
     for start in range(0, len(pending), batch_size):
         batch = pending[start:start + batch_size]
-        vectors = embed_texts(
-            client, [value for _, value in batch], model, "RETRIEVAL_DOCUMENT"
+        remaining = next_request_at - time.monotonic()
+        if remaining > 0:
+            logging.info("Pacing: jeda %.1f detik untuk limit embedding.", remaining)
+            time.sleep(remaining)
+
+        vectors = embed_with_quota_retry(
+            client, [text for _, text in batch], model, "RETRIEVAL_DOCUMENT",
+            max_retries=max_quota_retries,
         )
+        # batchEmbedContents can count each item toward the per-minute quota.
+        next_request_at = time.monotonic() + len(batch) * 60.0 / embed_rpm
         for (digest, _), vector in zip(batch, vectors):
             cache[digest] = vector
         web_knowledge.save_embedding_cache(cache_dir, cache_key, cache)
-        logging.info("Embedding progress: %s/%s unique new chunks",
-                     min(start + batch_size, len(pending)), len(pending))
-    if not chunks:
-        raise ValueError("Tidak ada potongan dokumen yang akan diindeks")
+        logging.info(
+            "Embedding berhasil dan tersimpan: %d/%d teks baru.",
+            min(start + batch_size, len(pending)), len(pending),
+        )
     return normalized(np.asarray([cache[key] for key in keys], dtype="float32"))
-
 
 def normalized(matrix: np.ndarray) -> np.ndarray:
     vectors = np.ascontiguousarray(matrix, dtype="float32")
@@ -187,7 +276,9 @@ def build_precomputed_index(client: Any, sources_path: Path,
                             index_dir: Path = DEFAULT_INDEX_DIR,
                             model: str = DEFAULT_EMBEDDING_MODEL,
                             refresh_hours: float = 12,
-                            batch_size: int = 8, force: bool = False) -> dict:
+                            batch_size: int = 8, force: bool = False,
+                            embed_rpm: int = DEFAULT_EMBED_ITEMS_PER_MINUTE,
+                            max_quota_retries: int = DEFAULT_MAX_QUOTA_RETRIES) -> dict:
     sources_path = Path(sources_path).resolve()
     sources = web_knowledge.load_sources(sources_path)
     pages, report = web_knowledge.sync_sources(
@@ -198,7 +289,8 @@ def build_precomputed_index(client: Any, sources_path: Path,
     if not chunks:
         raise ValueError("Tidak ada teks resmi untuk indeks")
     vectors = cached_document_embeddings(
-        client, chunks, model, web_knowledge.DEFAULT_CACHE_DIR, batch_size
+        client, chunks, model, web_knowledge.DEFAULT_CACHE_DIR, batch_size,
+        embed_rpm=embed_rpm, max_quota_retries=max_quota_retries,
     )
     index = faiss.IndexFlatIP(vectors.shape[1])
     index.add(vectors)
