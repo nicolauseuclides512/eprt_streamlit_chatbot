@@ -2,16 +2,17 @@
 
 Chatbot informasi **website resmi Language Center Telkom University**, bukan lagi chatbot berbasis PDF. Sumber web dikurasi di `sources.json`. PDF lama di folder `data/` tetap disimpan sebagai arsip, tetapi tidak dipakai sebagai knowledge base aktif.
 
-## Arsitektur
+## Arsitektur v1 (Hybrid RAG + Rule-Based FAQ + Precomputed FAISS)
 
-1. Hanya URL HTTPS dari domain yang secara eksplisit disetujui di `web_knowledge.py`. URL yang dipakai ada dalam `sources.json`; tidak ada crawling tautan bebas.
-2. Cek robots.txt, batasi redirect, respons dan waktu tunggu; ekstraksi HTML dengan Trafilatura dan fallback BeautifulSoup.
-3. Simpan snapshot HTML-terekstraksi, digest, sumber dan waktu pemeriksaan pada `.cache/web_rag/pages.json`.
-4. Pecah menjadi chunk dan simpan embedding per hash di `.cache/web_rag/embeddings.json`. Hanya chunk baru/berubah yang di-embedding ulang. Cari chunk dengan FAISS.
-5. Gemini menjawab berdasarkan konteks terpilih; Streamlit menampilkan URL sumber dan status pemeriksaan. Pertanyaan tentang jadwal, biaya, kuota, tanggal, atau pendaftaran meminta satu pemeriksaan langsung pada halaman dinamis yang relevan.
+1. **Preprocessing di luar Streamlit:** `scripts/build_index.py` mengambil sembilan URL resmi di `sources.json` dengan allowlist dan robots.txt, lalu menyimpan snapshot website dan embedding ke cache yang dipakai ulang.
+2. **Batch embedding + checkpoint:** teks dipotong berdasarkan paragraf (950 karakter, overlap 100); embedding dibuat per kelompok 8 teks dan cache disimpan setiap batch. `gemini-embedding-2` menggunakan daftar objek `Content` agar output tidak salah digabung.
+3. **Indeks FAISS pra-hitung:** file `index.faiss`, `chunks.json`, dan `metadata.json` disimpan sebagai snapshot berversi. File `current.json` hanya dipindahkan ke snapshot baru setelah berhasil.
+4. **Startup cepat:** `streamlit run app.py` hanya memuat snapshot FAISS dan membuat indeks leksikal BM25 ringan dari teks. **Startup tidak melakukan crawl atau embedding dokumen lagi.**
+5. **Routing FAQ:** pertanyaan yang cocok dengan aturan terkonfirmasi pada `faq_rules.json` dijawab langsung tanpa panggilan Gemini; pertanyaan lain masuk hybrid retrieval BM25 + FAISS.
+6. **Validasi jawaban:** Gemini diminta menulis sitasi `[S1]` (website) atau `[P1]` (kebijakan pengelola). Sistem menolak sitasi tidak dikenal, angka yang tidak ada di bukti yang dikutip, dan tautan fiktif. **Ini pagar pengaman deterministik, bukan jaminan verifikasi semantik seluruh klaim.**
+7. **Pembaruan sumber dinamis:** pertanyaan jadwal/biaya dapat mengecek satu halaman resmi secara langsung; pembaruan FAISS tetap dilakukan dengan menjalankan indexer terpisah.
 
-Jika halaman tidak dapat diambil, snapshot sebelumnya dipertahankan dan UI memperlihatkan peringatan. Metadata `campus` tetap digunakan untuk mengidentifikasi cakupan pengumuman atau program tertentu, **bukan** untuk mengasumsikan perbedaan jadwal/biaya/kelulusan per kampus.
-
+Data kebijakan memuat `subject`, `predicate`, `object`, `scope`, `valid_from`, `valid_until`, `status` dan provenance agar kelak dapat dikonversi ke Knowledge Graph. `valid_from = null` berarti tanggal efektif belum ditentukan; bukan berarti kebijakan berlaku selamanya.
 
 ## Kebijakan operasional lintas kampus (konfirmasi pengelola 18 November 2026)
 
@@ -24,36 +25,54 @@ Kebijakan operasional berada di `institutional_policy.py` dan dibedakan dari fak
 - Tidak ada angka tarif, tanggal/slot, atau batas kelulusan numerik yang ditetapkan dalam konfirmasi ini. Angka hanya boleh disebut apabila ada dasar resmi dan berlaku.
 - Aturan ini berasal dari pengelola Pusat Bahasa, **bukan kutipan halaman situs**; sumber dijelaskan terpisah pada UI.
 
-## Menjalankan secara lokal
+## Menjalankan secara lokal (Windows PowerShell)
 
-Memerlukan Python 3.11+, internet dan API key Gemini.
+Python 3.11+, akses internet untuk proses indexing pertama, dan API key Gemini.
 
-~~~bash
-git clone https://github.com/nicolauseuclides512/eprt_streamlit_chatbot.git
-cd eprt_streamlit_chatbot
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-streamlit run app.py
-~~~
+```powershell
+cd D:\Project\eprt_streamlit_chatbot
+git switch master
+git pull --ff-only origin master
 
-Edit `.streamlit/secrets.toml` sebelum menjalankan aplikasi:
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+if (-not (Test-Path ".streamlit\secrets.toml")) { Copy-Item .streamlit\secrets.toml.example .streamlit\secrets.toml }
+notepad .streamlit\secrets.toml
 
-~~~toml
+# Wajib sekali sebelum startup pertama, atau ketika website berubah
+.\.venv\Scripts\python.exe scripts\build_index.py
+
+# Setelah indeks berhasil terbentuk
+.\.venv\Scripts\python.exe -m streamlit run app.py
+```
+
+**Jika `.streamlit/secrets.toml` sudah berisi API key yang valid, jangan overwrite.** Perintah `Copy-Item` di atas digunakan hanya jika belum ada file tersebut; edit dan simpan API key secara lokal, jangan bagikan.
+
+Contoh secrets:
+
+```toml
 GEMINI_API_KEY = "API_KEY_ANDA"
 GEMINI_MODEL = "gemini-2.5-flash"
+EMBEDDING_MODEL = "gemini-embedding-001"
 SOURCE_SYNC_HOURS = "12"
 SOURCES_CONFIG_PATH = "sources.json"
-~~~
+PRECOMPUTED_INDEX_DIR = ".cache/web_rag/precomputed"
+```
 
-Pada Windows, aktivasi environment dapat menggunakan `.venv\Scripts\activate`. Jangan unggah API key atau secrets ke GitHub. Streamlit Community Cloud menggunakan `app.py` sebagai main file dan Secrets di dashboard cloud.
+Untuk memperbarui semua sumber secara paksa:
 
-## Pembaruan sumber dan cache
+```powershell
+.\.venv\Scripts\python.exe scripts\build_index.py --force-refresh
+```
 
-Sumber yang berumur minimal `SOURCE_SYNC_HOURS` (default 12 jam) akan dicek ulang ketika aplikasi aktif. Cache resource Streamlit dievaluasi setiap 30 menit pada akses/rerun. **Ini bukan scheduler latar 24/7** dan tidak menjamin pembaruan saat aplikasi tidur. Pada Streamlit Community Cloud, direktori cache lokal tidak persisten setelah rebuild/restart. Untuk sinkronisasi tanpa pengguna, perlu penjadwal dan penyimpanan persisten yang disiapkan terpisah.
+Atau batasi batch jika terkena rate limit: `--batch-size 4`. Crawler hanya mengambil domain resmi dan mengikuti robots.txt; embedding yang tidak berubah digunakan ulang. Jangan menghapus `.cache/web_rag/embeddings.json` jika ingin melanjutkan progres.
 
-Ubah `sources.json` untuk menambah/mengurangi halaman, dengan tetap membatasi pada halaman publik resmi dan mengikuti robots.txt. Untuk domain baru, ubah allowlist di kode setelah pemeriksaan operator. `dynamic: true` mengaktifkan pemeriksaan live untuk pertanyaan sensitif waktu.
+**Penting untuk Streamlit Community Cloud:** folder `.cache/` di-`gitignore` dan tidak ikut GitHub/deployment. Indeks harus disediakan oleh proses build/deployment dan disimpan pada lokasi persisten; jika belum disediakan, aplikasi akan menampilkan perintah untuk menjalankan indexer, bukan diam-diam membuat semua embedding pada setiap startup. Integrasi artifact deployment/penjadwalan belum diimplementasikan pada v1 ini.
+
+## Pembaruan, keamanan, dan cache
+
+Sumber yang berhasil dicek diberi waktu pemeriksaan dan snapshot lama dipertahankan jika refresh gagal. Aplikasi hanya memuat indeks pra-hitung; untuk memperbarui pengetahuan yang sudah terindeks, **jalankan indexer lagi**. Cache embedding dan snapshot berada pada `.cache/web_rag` (abaikan dari Git). Sinkronisasi terjadwal memerlukan job dan penyimpanan persisten terpisah.
+
+`faq_rules.json` hanya memuat kebijakan yang dikonfirmasi pengelola. Jangan menambah nominal biaya atau angka kelulusan tanpa dokumen keputusan yang telah berlaku. Data peserta/mahasiswa tidak masuk knowledge base publik.
 
 ## Kompatibilitas versi Gemini API (November 2026)
 
@@ -93,7 +112,7 @@ Log exception lengkap dicetak di **terminal yang menjalankan Streamlit**, bukan 
 
 ~~~bash
 python -m unittest discover -s tests -v
-python -m compileall -q app.py web_knowledge.py
+python -m compileall -q app.py rag_pipeline.py faq_rules.py answer_guard.py scripts tests
 ~~~
 
 GitHub Actions menjalankan test unit secara offline; tidak melakukan panggilan Gemini atau website produksi. Deployment, kualitas jawaban, hak akses sumber dan kuota API tetap harus diuji manual sebelum go-live.
