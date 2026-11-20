@@ -270,13 +270,19 @@ def retrieve_hybrid(client: Any, index: faiss.Index, chunks: list[dict],
     if not qtokens or not chunks:
         return [], None
     lexical_scores = bm25.get_scores(qtokens)
-    lexical_rank = [
-        int(i) for i in np.argsort(-lexical_scores)
-        if lexical_scores[i] > 0
-        and set(qtokens).intersection(tokenize(
-            f"{chunks[int(i)]['title']} {chunks[int(i)]['text']}"
-        ))
-    ][:20]
+    # BM25Okapi can assign zero IDF on very small corpora. Preserve
+    # literal non-stopword overlap as a safe lexical fallback.
+    overlaps = [
+        len(set(qtokens).intersection(tokenize(
+            f"{item['title']} {item['topic']} {item['text']}"
+        )))
+        for item in chunks
+    ]
+    lexical_rank = sorted(
+        (i for i in range(len(chunks)) if overlaps[i] > 0),
+        key=lambda i: (float(lexical_scores[i]), overlaps[i]),
+        reverse=True,
+    )[:20]
     semantic_rank = []
     semantic_scores = {}
     warning = None
