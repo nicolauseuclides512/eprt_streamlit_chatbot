@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "source": "Konfirmasi pengelola Pusat Bahasa Telkom University",
+  "confirmed_at": "2026-11-18",
+  "rules": [
+    {
+      "id": "uniform_fees",
+      "subject": "LanguageService",
+      "predicate": "hasUniformFeePolicy",
+      "object": "AcrossTelkomUniversityCampuses",
+      "scope": "same_service_and_participant_category",
+      "valid_from": null,
+      "valid_until": null,
+      "status": "active",
+      "match_groups": [
+        [
+          "biaya",
+          "harga",
+          "tarif"
+        ],
+        [
+          "sama",
+          "beda",
+          "berbeda",
+          "seragam",
+          "seluruh",
+          "semua"
+        ],
+        [
+          "bandung",
+          "purwokerto",
+          "jakarta",
+          "surabaya",
+          "kampus",
+          "tel-u",
+          "telkom university"
+        ]
+      ],
+      "exclude_terms": [
+        "berapa",
+        "nominal",
+        "rupiah"
+      ],
+      "answer": "Biaya layanan bahasa berlaku sama di seluruh kampus Telkom University untuk jenis layanan dan kategori peserta yang sama. Nominal biaya perlu diperiksa pada informasi resmi program terkait; jangan menyamakan EPrT reguler dengan program khusus mahasiswa baru."
+    },
+    {
+      "id": "uniform_schedules",
+      "subject": "LanguageService",
+      "predicate": "hasUniformSchedulePolicy",
+      "object": "AcrossTelkomUniversityCampuses",
+      "scope": "same_service_and_participant_category",
+      "valid_from": null,
+      "valid_until": null,
+      "status": "active",
+      "match_groups": [
+        [
+          "jadwal",
+          "sesi"
+        ],
+        [
+          "sama",
+          "beda",
+          "berbeda",
+          "seragam",
+          "seluruh",
+          "semua"
+        ],
+        [
+          "bandung",
+          "purwokerto",
+          "jakarta",
+          "surabaya",
+          "kampus",
+          "tel-u",
+          "telkom university"
+        ]
+      ],
+      "exclude_terms": [
+        "kapan",
+        "tanggal",
+        "jam berapa",
+        "minggu depan",
+        "besok",
+        "hari ini",
+        "kuota",
+        "slot"
+      ],
+      "answer": "Ketentuan jadwal layanan yang sejenis berlaku seragam di seluruh kampus Telkom University. Untuk tanggal, jam, slot, atau kuota aktual, periksa kanal pendaftaran atau pengumuman resmi yang berlaku."
+    },
+    {
+      "id": "uniform_graduation",
+      "subject": "GraduationRequirement",
+      "predicate": "isUniformAcross",
+      "object": "TelkomUniversityCampuses",
+      "scope": "same_service_and_participant_category",
+      "valid_from": null,
+      "valid_until": null,
+      "status": "active",
+      "match_groups": [
+        [
+          "kelulusan",
+          "lulus",
+          "passing grade",
+          "nilai minimum",
+          "batas nilai",
+          "ambang"
+        ],
+        [
+          "sama",
+          "beda",
+          "berbeda",
+          "seragam",
+          "seluruh",
+          "semua"
+        ],
+        [
+          "bandung",
+          "purwokerto",
+          "jakarta",
+          "surabaya",
+          "kampus",
+          "tel-u",
+          "telkom university"
+        ]
+      ],
+      "exclude_terms": [
+        "berapa",
+        "475",
+        "450",
+        "skor"
+      ],
+      "answer": "Ketentuan kelulusan layanan yang sama berlaku seragam di seluruh kampus Telkom University. Angka ambang kelulusan spesifik hanya boleh dinyatakan berdasarkan keputusan resmi yang sudah berlaku; usulan angka baru tidak otomatis menjadi kebijakan."
+    },
+    {
+      "id": "nonbandung_test_online",
+      "subject": "LanguageTest",
+      "predicate": "temporaryDeliveryMode",
+      "object": "Online",
+      "scope": "TelkomUniversityCampusesExceptBandung",
+      "valid_from": null,
+      "valid_until": null,
+      "status": "active",
+      "match_groups": [
+        [
+          "online",
+          "daring",
+          "offline",
+          "luring",
+          "tatap muka",
+          "onsite",
+          "di kampus"
+        ],
+        [
+          "tes",
+          "eprt",
+          "ujian"
+        ],
+        [
+          "luar bandung",
+          "purwokerto",
+          "jakarta",
+          "surabaya",
+          "pjj",
+          "kampus cabang"
+        ]
+      ],
+      "exclude_terms": [],
+      "answer": "Untuk sementara, tes bahasa di kampus Telkom University di luar Bandung dilaksanakan secara online/daring. Pelaksanaan di Bandung mengikuti pengumuman resmi untuk masing-masing program."
+    },
+    {
+      "id": "nonbandung_course_online",
+      "subject": "LanguageCourse",
+      "predicate": "temporaryDeliveryMode",
+      "object": "Online",
+      "scope": "TelkomUniversityCampusesExceptBandung",
+      "valid_from": null,
+      "valid_until": null,
+      "status": "active",
+      "match_groups": [
+        [
+          "online",
+          "daring",
+          "offline",
+          "luring",
+          "tatap muka",
+          "onsite",
+          "di kampus"
+        ],
+        [
+          "kursus",
+          "pelatihan"
+        ],
+        [
+          "luar bandung",
+          "purwokerto",
+          "jakarta",
+          "surabaya",
+          "pjj",
+          "kampus cabang"
+        ]
+      ],
+      "exclude_terms": [],
+      "answer": "Untuk sementara, kursus bahasa di kampus Telkom University di luar Bandung dilaksanakan secara online/daring. Pelaksanaan di Bandung mengikuti pengumuman resmi masing-masing layanan."
+    },
+    {
+      "id": "maba_reguler_distinct",
+      "subject": "EPrTMaba",
+      "predicate": "hasDifferentProgramEligibilityThan",
+      "object": "EPrTRegular",
+      "scope": "program_and_participant_category",
+      "valid_from": null,
+      "valid_until": null,
+      "status": "active",
+      "match_groups": [
+        [
+          "maba",
+          "mahasiswa baru"
+        ],
+        [
+          "reguler"
+        ],
+        [
+          "gratis",
+          "biaya",
+          "harga",
+          "tarif"
+        ]
+      ],
+      "exclude_terms": [],
+      "answer": "Program EPrT mahasiswa baru dan EPrT reguler memiliki kategori layanan/peserta yang berbeda. Ketentuan gratis pada program khusus mahasiswa baru tidak dapat langsung diterapkan pada semua tes EPrT reguler."
+    }
+  ]
+}
