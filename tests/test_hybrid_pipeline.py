@@ -94,8 +94,9 @@ class QuotaHandlingTests(unittest.TestCase):
         error = self.FakeQuotaError(
             "429 RESOURCE_EXHAUSTED: free tier requests per day limit exceeded"
         )
-        with patch("rag_pipeline.embed_texts", side_effect=error), (
-            patch("rag_pipeline.time.sleep") as sleep
+        with (
+            patch("rag_pipeline.embed_texts", side_effect=error),
+            patch("rag_pipeline.time.sleep") as sleep,
         ):
             with self.assertRaisesRegex(RuntimeError, "harian"):
                 rag.embed_with_quota_retry(
@@ -104,8 +105,9 @@ class QuotaHandlingTests(unittest.TestCase):
             sleep.assert_not_called()
 
     def test_other_error_is_not_retried(self):
-        with patch("rag_pipeline.embed_texts", side_effect=ValueError("invalid model")), (
-            patch("rag_pipeline.time.sleep") as sleep
+        with (
+            patch("rag_pipeline.embed_texts", side_effect=ValueError("invalid model")),
+            patch("rag_pipeline.time.sleep") as sleep,
         ):
             with self.assertRaisesRegex(ValueError, "invalid model"):
                 rag.embed_with_quota_retry(
@@ -127,10 +129,11 @@ class QuotaHandlingTests(unittest.TestCase):
 
     def test_proactive_pacing_counts_text_items(self):
         chunks = [{"text": f"Cache miss unique text {i}"} for i in range(2)]
-        with tempfile.TemporaryDirectory() as tmp, (
-            patch("rag_pipeline.embed_texts", return_value=[vector(0.2)])
-        ), patch("rag_pipeline.time.monotonic", return_value=0), (
-            patch("rag_pipeline.time.sleep") as sleep
+        with (
+            tempfile.TemporaryDirectory() as tmp,
+            patch("rag_pipeline.embed_texts", return_value=[vector(0.2)]),
+            patch("rag_pipeline.time.monotonic", return_value=0),
+            patch("rag_pipeline.time.sleep") as sleep,
         ):
             rag.cached_document_embeddings(
                 object(), chunks, "mock", Path(tmp),
@@ -141,11 +144,13 @@ class QuotaHandlingTests(unittest.TestCase):
     def test_cache_saved_before_following_batch_hits_429(self):
         chunks = [{"text": f"Document {i} unique"} for i in range(2)]
         error = self.FakeQuotaError("429 RESOURCE_EXHAUSTED. Please retry in 1s.")
-        with tempfile.TemporaryDirectory() as tmp, (
-            patch("rag_pipeline.time.sleep")
-        ), patch("rag_pipeline.embed_texts", side_effect=[
-            [vector(0.2)], error
-        ]):
+        with (
+            tempfile.TemporaryDirectory() as tmp,
+            patch("rag_pipeline.time.sleep"),
+            patch("rag_pipeline.embed_texts", side_effect=[
+                [vector(0.2)], error
+            ]),
+        ):
             with self.assertRaisesRegex(RuntimeError, "cache"):
                 rag.cached_document_embeddings(
                     object(), chunks, "mock", Path(tmp), batch_size=1,
