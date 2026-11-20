@@ -400,35 +400,43 @@ if question:
                         live_context, live_warning = web_knowledge.live_check(
                             question, contexts, metadata["sources"]
                         )
-                        evidence = make_evidence(contexts, live_context)
-                        stage = "pembuatan jawaban Gemini"
-                        draft_answer = generate_answer(
-                            client, question, evidence.text
-                        )
-                        stage = "validasi bukti jawaban"
-                        check = validate_answer(draft_answer, evidence)
-                        if not check.ok:
-                            logging.warning("Jawaban tidak lolos bukti: %s", check.message)
+                        if (web_knowledge.LIVE_QUERY_PATTERN.search(question)
+                                and live_context is None):
                             answer = (
-                                "Jawaban belum dapat diverifikasi terhadap sumber "
-                                "yang tersedia. Silakan periksa kanal resmi LaC."
+                                "Informasi ini dapat berubah dan belum dapat "
+                                "diverifikasi dari sumber resmi secara langsung. "
+                                "Silakan periksa kanal pendaftaran atau pengumuman LaC."
                             )
                         else:
-                            answer = draft_answer
-                            success = True
-                            seen_urls = set()
-                            for ref in check.referenced:
-                                src = evidence.sources[ref]
-                                if src["type"] == "policy":
-                                    source_labels.append(
-                                        f"[{ref}] Konfirmasi pengelola Pusat Bahasa "
-                                        f"({CONFIRMED_AT})"
-                                    )
-                                elif src["url"] not in seen_urls:
-                                    source_labels.append(
-                                        f"[{ref}] {src['title']} — {src['url']}"
-                                    )
-                                    seen_urls.add(src["url"])
+                            evidence = make_evidence(contexts, live_context)
+                            stage = "pembuatan jawaban Gemini"
+                            draft_answer = generate_answer(
+                                client, question, evidence.text
+                            )
+                            stage = "validasi bukti jawaban"
+                            check = validate_answer(draft_answer, evidence)
+                            if not check.ok:
+                                logging.warning("Jawaban tidak lolos bukti: %s", check.message)
+                                answer = (
+                                    "Jawaban belum dapat diverifikasi terhadap sumber "
+                                    "yang tersedia. Silakan periksa kanal resmi LaC."
+                                )
+                            else:
+                                answer = draft_answer
+                                success = True
+                                seen_urls = set()
+                                for ref in check.referenced:
+                                    src = evidence.sources[ref]
+                                    if src["type"] == "policy":
+                                        source_labels.append(
+                                            f"[{ref}] Konfirmasi pengelola Pusat Bahasa "
+                                            f"({CONFIRMED_AT})"
+                                        )
+                                    elif src["url"] not in seen_urls:
+                                        source_labels.append(
+                                            f"[{ref}] {src['title']} — {src['url']}"
+                                        )
+                                        seen_urls.add(src["url"])
         except Exception as exc:
             logging.exception("Kegagalan chatbot pada tahap %s", stage)
             answer = friendly_error(exc, stage)
