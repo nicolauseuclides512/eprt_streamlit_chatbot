@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
       - name: Compile Python files
-        run: python -m compileall -q app.py web_knowledge.py institutional_policy.py diagnostics.py gemini_client.py tests
+        run: python -m compileall -q app.py web_knowledge.py institutional_policy.py diagnostics.py gemini_client.py faq_rules.py rag_pipeline.py answer_guard.py scripts tests
       - name: Unit tests
         run: python -m unittest discover -s tests -v
       - name: Live public source smoke check (non-blocking)
