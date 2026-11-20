@@ -164,7 +164,16 @@
           "kampus cabang"
         ]
       ],
-      "exclude_terms": [],
+      "exclude_terms": [
+        "berapa",
+        "kapan",
+        "tanggal",
+        "kuota",
+        "slot",
+        "tersedia",
+        "jam",
+        "kapasitas"
+      ],
       "answer": "Untuk sementara, tes bahasa di kampus Telkom University di luar Bandung dilaksanakan secara online/daring. Pelaksanaan di Bandung mengikuti pengumuman resmi untuk masing-masing program."
     },
     {
@@ -199,7 +208,16 @@
           "kampus cabang"
         ]
       ],
-      "exclude_terms": [],
+      "exclude_terms": [
+        "berapa",
+        "kapan",
+        "tanggal",
+        "kuota",
+        "slot",
+        "tersedia",
+        "jam",
+        "kapasitas"
+      ],
       "answer": "Untuk sementara, kursus bahasa di kampus Telkom University di luar Bandung dilaksanakan secara online/daring. Pelaksanaan di Bandung mengikuti pengumuman resmi masing-masing layanan."
     },
     {
