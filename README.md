@@ -64,7 +64,20 @@ Untuk memperbarui semua sumber secara paksa:
 .\.venv\Scripts\python.exe scripts\build_index.py --force-refresh
 ```
 
-Atau batasi batch jika terkena rate limit: `--batch-size 4`. Crawler hanya mengambil domain resmi dan mengikuti robots.txt; embedding yang tidak berubah digunakan ulang. Jangan menghapus `.cache/web_rag/embeddings.json` jika ingin melanjutkan progres.
+Jika Gemini mengembalikan **429 RESOURCE_EXHAUSTED** dengan pesan *per-minute limit*, indexer kini:
+- secara konservatif membatasi **jumlah teks yang dikirim** ke default `--embed-rpm 60` (bukan menghitung satu HTTP batch sebagai satu unit kuota);
+- membaca `RetryInfo.retryDelay` atau pesan `Please retry in ...s`, kemudian otomatis mencoba ulang sampai batas `--max-429-retries`;
+- menyimpan hasil batch yang berhasil ke cache sehingga eksekusi berikutnya melanjutkan teks yang belum diproses.
+
+Perintah untuk Free Tier (contoh server menunjukkan batas 100 per menit):
+
+```powershell
+.\.venv\Scripts\python.exe scripts\build_index.py --batch-size 4 --embed-rpm 40 --max-429-retries 3
+```
+
+Jangan hapus `.cache/web_rag/embeddings.json` atau ganti model embedding ketika melanjutkan indexing, agar pekerjaan sebelumnya tetap dipakai. **Mengurangi batch saja tidak otomatis mengatasi kuota**: bila tiap teks dihitung ke limit, jumlah input per menit juga harus dibatasi. Setelan RPM 60 adalah batas konservatif untuk proyek yang tidak sedang dipakai layanan lain; bila proyek digunakan bersama, turunkan lagi. Bila kuota **harian** habis, aplikasi tidak terus mengulang permintaan: periksa dashboard kuota Google AI Studio. Batas efektif tiap proyek dapat berubah.
+
+ Crawler hanya mengambil domain resmi dan mengikuti robots.txt; embedding yang tidak berubah digunakan ulang. Jangan menghapus `.cache/web_rag/embeddings.json` jika ingin melanjutkan progres.
 
 **Penting untuk Streamlit Community Cloud:** folder `.cache/` di-`gitignore` dan tidak ikut GitHub/deployment. Indeks harus disediakan oleh proses build/deployment dan disimpan pada lokasi persisten; jika belum disediakan, aplikasi akan menampilkan perintah untuk menjalankan indexer, bukan diam-diam membuat semua embedding pada setiap startup. Integrasi artifact deployment/penjadwalan belum diimplementasikan pada v1 ini.
 
