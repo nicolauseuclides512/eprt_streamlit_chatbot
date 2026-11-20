@@ -1,0 +1,273 @@
+{
+  "description": "Offline routing tests only, not verified Gemini completions",
+  "cases": [
+    {
+      "question": "Apakah biaya EPrT Purwokerto berbeda dari Bandung?",
+      "expected_rule": "uniform_fees"
+    },
+    {
+      "question": "Apakah biaya EPrT di setiap kampus sama?",
+      "expected_rule": "uniform_fees"
+    },
+    {
+      "question": "Biaya kursus Telkom University sama di semua kampus?",
+      "expected_rule": "uniform_fees"
+    },
+    {
+      "question": "Apakah harga kursus Purwokerto berbeda dengan Bandung?",
+      "expected_rule": "uniform_fees"
+    },
+    {
+      "question": "Tarif tes Bahasa di Jakarta dan Bandung sama?",
+      "expected_rule": "uniform_fees"
+    },
+    {
+      "question": "Benarkah biaya layanan seluruh kampus seragam?",
+      "expected_rule": "uniform_fees"
+    },
+    {
+      "question": "Harga tes di Surabaya beda dengan Bandung?",
+      "expected_rule": "uniform_fees"
+    },
+    {
+      "question": "Biaya LaC kampus Purwokerto apakah sama?",
+      "expected_rule": "uniform_fees"
+    },
+    {
+      "question": "Apakah tarif EPrT seluruh Tel-U berbeda?",
+      "expected_rule": "uniform_fees"
+    },
+    {
+      "question": "Apakah biaya di Bandung dan Purwokerto seragam?",
+      "expected_rule": "uniform_fees"
+    },
+    {
+      "question": "Jadwal EPrT Purwokerto berbeda dengan Bandung?",
+      "expected_rule": "uniform_schedules"
+    },
+    {
+      "question": "Apakah jadwal tes sama untuk semua kampus?",
+      "expected_rule": "uniform_schedules"
+    },
+    {
+      "question": "Benarkah sesi EPrT di setiap kampus sama?",
+      "expected_rule": "uniform_schedules"
+    },
+    {
+      "question": "Jadwal kursus Telkom University seragam?",
+      "expected_rule": "uniform_schedules"
+    },
+    {
+      "question": "Apakah jadwal tes di Surabaya berbeda dengan Bandung?",
+      "expected_rule": "uniform_schedules"
+    },
+    {
+      "question": "Jadwal tes seluruh Tel-U sama?",
+      "expected_rule": "uniform_schedules"
+    },
+    {
+      "question": "Sesi tes Purwokerto beda dari Bandung?",
+      "expected_rule": "uniform_schedules"
+    },
+    {
+      "question": "Apakah jadwal kursus di Jakarta sama dengan Bandung?",
+      "expected_rule": "uniform_schedules"
+    },
+    {
+      "question": "Apakah ketentuan kelulusan EPrT Purwokerto sama dengan Bandung?",
+      "expected_rule": "uniform_graduation"
+    },
+    {
+      "question": "Passing grade di Jakarta beda dengan Bandung?",
+      "expected_rule": "uniform_graduation"
+    },
+    {
+      "question": "Aturan lulus di seluruh kampus sama?",
+      "expected_rule": "uniform_graduation"
+    },
+    {
+      "question": "Kelulusan kursus Telkom University seragam?",
+      "expected_rule": "uniform_graduation"
+    },
+    {
+      "question": "Nilai minimum EPrT Purwokerto beda dari Bandung?",
+      "expected_rule": "uniform_graduation"
+    },
+    {
+      "question": "Apakah batas nilai seluruh kampus sama?",
+      "expected_rule": "uniform_graduation"
+    },
+    {
+      "question": "Ambang kelulusan di Bandung sama dengan Surabaya?",
+      "expected_rule": "uniform_graduation"
+    },
+    {
+      "question": "Apakah tes EPrT Purwokerto online?",
+      "expected_rule": "nonbandung_test_online"
+    },
+    {
+      "question": "Bisakah tes bahasa di Jakarta luring?",
+      "expected_rule": "nonbandung_test_online"
+    },
+    {
+      "question": "Apakah ujian di Surabaya tatap muka?",
+      "expected_rule": "nonbandung_test_online"
+    },
+    {
+      "question": "Tes EPrT luar Bandung daring atau offline?",
+      "expected_rule": "nonbandung_test_online"
+    },
+    {
+      "question": "Tes di kampus cabang diadakan onsite?",
+      "expected_rule": "nonbandung_test_online"
+    },
+    {
+      "question": "Apakah tes di PJJ online?",
+      "expected_rule": "nonbandung_test_online"
+    },
+    {
+      "question": "Pelaksanaan eprt Purwokerto offline?",
+      "expected_rule": "nonbandung_test_online"
+    },
+    {
+      "question": "Apakah ujian di Jakarta dilaksanakan di kampus?",
+      "expected_rule": "nonbandung_test_online"
+    },
+    {
+      "question": "Kursus bahasa Purwokerto online?",
+      "expected_rule": "nonbandung_course_online"
+    },
+    {
+      "question": "Apakah pelatihan bahasa luar Bandung daring?",
+      "expected_rule": "nonbandung_course_online"
+    },
+    {
+      "question": "Kursus di Surabaya tatap muka atau online?",
+      "expected_rule": "nonbandung_course_online"
+    },
+    {
+      "question": "Apakah kursus di Jakarta offline?",
+      "expected_rule": "nonbandung_course_online"
+    },
+    {
+      "question": "Kursus PJJ dilakukan daring?",
+      "expected_rule": "nonbandung_course_online"
+    },
+    {
+      "question": "Pelatihan di kampus cabang onsite?",
+      "expected_rule": "nonbandung_course_online"
+    },
+    {
+      "question": "Apakah kursus di Purwokerto dilaksanakan di kampus?",
+      "expected_rule": "nonbandung_course_online"
+    },
+    {
+      "question": "Apakah biaya EPrT maba gratis berarti reguler gratis?",
+      "expected_rule": "maba_reguler_distinct"
+    },
+    {
+      "question": "Harga EPrT mahasiswa baru dan reguler sama-sama gratis?",
+      "expected_rule": "maba_reguler_distinct"
+    },
+    {
+      "question": "Tarif tes maba berbeda dari tes reguler, apakah gratis?",
+      "expected_rule": "maba_reguler_distinct"
+    },
+    {
+      "question": "Apakah program mahasiswa baru dan reguler biaya sama?",
+      "expected_rule": "maba_reguler_distinct"
+    },
+    {
+      "question": "Apakah EPrT reguler gratis seperti EPrT maba?",
+      "expected_rule": "maba_reguler_distinct"
+    },
+    {
+      "question": "Biaya tes mahasiswa baru juga berlaku untuk reguler?",
+      "expected_rule": "maba_reguler_distinct"
+    },
+    {
+      "question": "Berapa biaya EPrT di Purwokerto?",
+      "expected_rule": null
+    },
+    {
+      "question": "Jadwal EPrT Purwokerto kapan?",
+      "expected_rule": null
+    },
+    {
+      "question": "Berapa skor kelulusan 475 di Bandung?",
+      "expected_rule": null
+    },
+    {
+      "question": "Apa pengertian EPrT?",
+      "expected_rule": null
+    },
+    {
+      "question": "Apa saja komponen tes EPrT?",
+      "expected_rule": null
+    },
+    {
+      "question": "Bagaimana cara mendaftar EPrT?",
+      "expected_rule": null
+    },
+    {
+      "question": "Apakah tes di Bandung offline?",
+      "expected_rule": null
+    },
+    {
+      "question": "Apakah kursus di Bandung luring?",
+      "expected_rule": null
+    },
+    {
+      "question": "Berapa biaya tes EPrT maba?",
+      "expected_rule": null
+    },
+    {
+      "question": "Apa syarat nilai kelulusan di Purwokerto?",
+      "expected_rule": null
+    },
+    {
+      "question": "Apakah materi kursus lengkap?",
+      "expected_rule": null
+    },
+    {
+      "question": "Apa nomor telepon LaC?",
+      "expected_rule": null
+    },
+    {
+      "question": "Bagaimana cara mengunduh sertifikat?",
+      "expected_rule": null
+    },
+    {
+      "question": "Apa lokasi Laboratorium Bahasa?",
+      "expected_rule": null
+    },
+    {
+      "question": "Apa biaya terjemahan?",
+      "expected_rule": null
+    },
+    {
+      "question": "Jadwal EPrT minggu depan sama di seluruh kampus?",
+      "expected_rule": null
+    },
+    {
+      "question": "Apakah semua peserta wajib nilai 475?",
+      "expected_rule": null
+    },
+    {
+      "question": "Apakah saya sudah lulus EPrT?",
+      "expected_rule": null
+    },
+    {
+      "question": "Ada kuota tes onsite di Purwokerto?",
+      "expected_rule": null
+    },
+    {
+      "question": "Saya mau lihat nilai NIM mahasiswa tertentu",
+      "expected_rule": null
+    },
+    {
+      "question": "Berapa biaya kursus yang sedang promo?",
+      "expected_rule": null
+    }
+  ]
+}
