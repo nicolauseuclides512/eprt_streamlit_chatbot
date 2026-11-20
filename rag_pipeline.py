@@ -47,7 +47,7 @@ def tokenize(value: str) -> list[str]:
 def recursive_chunk_text(text: str, chunk_size: int = CHUNK_SIZE,
                          overlap: int = CHUNK_OVERLAP) -> list[str]:
     """Potong per paragraf dan kalimat, mempertahankan sedikit konteks."""
-    separators = ["\n\n", "\n", ". ", "; ", ", ", "]
+    separators = ["\n\n", "\n", ". ", "; ", ", ", " "]
 
     def split(segment: str, level: int = 0) -> list[str]:
         segment = segment.strip()
