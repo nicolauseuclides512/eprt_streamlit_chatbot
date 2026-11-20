@@ -52,6 +52,14 @@ def main() -> None:
         "SOURCE_SYNC_HOURS", secrets.get("SOURCE_SYNC_HOURS", "12")
     )))
     parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument(
+        "--embed-rpm", type=int, default=60,
+        help="Maksimum teks embedding per menit (default 60 dari kuota 100 Free Tier).",
+    )
+    parser.add_argument(
+        "--max-429-retries", type=int, default=3,
+        help="Maksimum percobaan ulang saat terkena 429 (default 3).",
+    )
     parser.add_argument("--force-refresh", action="store_true", help="Fetch all sources again")
     args = parser.parse_args()
 
@@ -67,6 +75,8 @@ def main() -> None:
         model=args.model,
         refresh_hours=args.refresh_hours,
         batch_size=args.batch_size,
+        embed_rpm=args.embed_rpm,
+        max_quota_retries=args.max_429_retries,
         force=args.force_refresh,
     )
     print(f"Index READY: {metadata['total_chunks']} chunks, "
