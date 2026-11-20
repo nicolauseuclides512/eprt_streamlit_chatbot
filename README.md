@@ -55,6 +55,25 @@ Sumber yang berumur minimal `SOURCE_SYNC_HOURS` (default 12 jam) akan dicek ulan
 
 Ubah `sources.json` untuk menambah/mengurangi halaman, dengan tetap membatasi pada halaman publik resmi dan mengikuti robots.txt. Untuk domain baru, ubah allowlist di kode setelah pemeriksaan operator. `dynamic: true` mengaktifkan pemeriksaan live untuk pertanyaan sensitif waktu.
 
+## Kompatibilitas versi Gemini API (November 2026)
+
+Google Gen AI Python SDK versi 3.0.0 (5 November 2026) mengubah default
+Gemini Developer API dari `v1beta` menjadi `v1`. Pada chatbot ini,
+`system_instruction` yang memuat kebijakan operasional dapat ditolak oleh
+endpoint `v1` dengan error:
+
+```text
+400 INVALID_ARGUMENT
+Developer instruction is not enabled for api version v1.
+Use api version v1beta instead.
+```
+
+File `gemini_client.py` memaksa `types.HttpOptions(api_version="v1beta")`
+saat membuat `genai.Client`. Client yang sama dipakai untuk pembuatan
+embedding dan jawaban. Tidak perlu menonaktifkan `system_instruction`,
+mengubah API key, atau melakukan downgrade SDK untuk memperbaiki error ini.
+Restart Streamlit setelah `git pull` dan ulangi pertanyaan.
+
 ## Diagnosis gagal menjawab
 
 Jika jawaban Gemini gagal dibuat, chatbot **tidak menampilkan tautan hasil pencarian sebagai pengganti jawaban**. Aplikasi menampilkan tahap yang gagal beserta kategori error yang aman tanpa menampilkan isi API key/prompt dari exception.
