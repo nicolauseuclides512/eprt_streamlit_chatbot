@@ -35,7 +35,7 @@ git switch master
 git pull --ff-only origin master
 
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-Copy-Item .streamlit\secrets.toml.example .streamlit\secrets.toml -ErrorAction SilentlyContinue
+if (-not (Test-Path ".streamlit\secrets.toml")) { Copy-Item .streamlit\secrets.toml.example .streamlit\secrets.toml }
 notepad .streamlit\secrets.toml
 
 # Wajib sekali sebelum startup pertama, atau ketika website berubah
