@@ -55,6 +55,21 @@ Sumber yang berumur minimal `SOURCE_SYNC_HOURS` (default 12 jam) akan dicek ulan
 
 Ubah `sources.json` untuk menambah/mengurangi halaman, dengan tetap membatasi pada halaman publik resmi dan mengikuti robots.txt. Untuk domain baru, ubah allowlist di kode setelah pemeriksaan operator. `dynamic: true` mengaktifkan pemeriksaan live untuk pertanyaan sensitif waktu.
 
+## Diagnosis gagal menjawab
+
+Jika jawaban Gemini gagal dibuat, chatbot **tidak menampilkan tautan hasil pencarian sebagai pengganti jawaban**. Aplikasi menampilkan tahap yang gagal beserta kategori error yang aman tanpa menampilkan isi API key/prompt dari exception.
+
+| Indikator | Arti | Perbaikan pertama |
+|---|---|---|
+| `API_KEY_INVALID` | Kunci API salah atau tidak aktif | Periksa `.streamlit/secrets.toml`; jangan bagikan key |
+| `429 RESOURCE_EXHAUSTED` | Kuota/rate limit Google tercapai | Periksa kuota Google AI Studio, lalu tunggu batasnya tersedia |
+| `404 NOT_FOUND` | Model generasi tidak tersedia bagi key | Periksa `GEMINI_MODEL` |
+| `400 INVALID_ARGUMENT` | Permintaan/parameter model tidak diterima | Periksa log terminal dan kompatibilitas SDK/model |
+| `503 UNAVAILABLE` | Layanan model sementara tidak tersedia | Ulangi setelah beberapa saat |
+| `timeout` / koneksi | Gagal menjangkau API/website | Periksa jaringan/proxy/firewall |
+
+Log exception lengkap dicetak di **terminal yang menjalankan Streamlit**, bukan di chat. Jangan kirim log yang masih memuat API key atau data pribadi. **Keberhasilan sinkronisasi halaman web bukan bukti jawaban Gemini berhasil.** Verifikasi kode dengan `python -m unittest discover -s tests -v`; pengujian end-to-end tetap memerlukan Gemini API key yang valid.
+
 ## Test
 
 ~~~bash
