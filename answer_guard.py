@@ -69,6 +69,8 @@ def validate_answer(answer: str, evidence: Evidence) -> GuardResult:
     cited_text = " ".join(evidence.sources[ref]["text"] for ref in citations)
     # Explicit dates/fees/scores must be present in cited evidence (or policy).
     plain_answer = REF_RE.sub("", answer)
+    # Numbered-list markers are formatting, not claims about numeric facts.
+    plain_answer = re.sub(r"(?m)^\s*(?:[-*]\s*)?\d{1,2}[.)]\s+", "", plain_answer)
     for numeric in NUMBER_RE.findall(plain_answer):
         numeric = numeric.rstrip(".,:/-")
         if not numeric:
