@@ -117,8 +117,9 @@ class QuotaHandlingTests(unittest.TestCase):
 
     def test_429_retry_limit_gives_resumable_message(self):
         error = self.FakeQuotaError("429 RESOURCE_EXHAUSTED. Please retry in 1s.")
-        with patch("rag_pipeline.embed_texts", side_effect=error), (
-            patch("rag_pipeline.time.sleep") as sleep
+        with (
+            patch("rag_pipeline.embed_texts", side_effect=error),
+            patch("rag_pipeline.time.sleep") as sleep,
         ):
             with self.assertRaisesRegex(RuntimeError, "cache"):
                 rag.embed_with_quota_retry(
