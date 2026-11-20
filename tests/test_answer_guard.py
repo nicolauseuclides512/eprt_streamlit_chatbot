@@ -34,6 +34,10 @@ class GroundingTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertIn("Angka", result.message)
 
+    def test_numbered_list_markers_do_not_require_numeric_evidence(self):
+        response = "Komponen EPrT:\n1. Listening [S1].\n2. Grammar [S1]."
+        self.assertTrue(validate_answer(response, self.evidence).ok)
+
     def test_fabricated_link_rejected(self):
         self.assertFalse(validate_answer(
             "Daftar melalui https://unknown.example/register [S1].",
