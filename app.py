@@ -16,6 +16,7 @@ from google.genai import types
 
 import web_knowledge
 from institutional_policy import POLICY_TEXT, SOURCE, CONFIRMED_AT, policy_related
+from diagnostics import friendly_error
 
 APP_DIR = Path(__file__).resolve().parent
 DEFAULT_GENERATION_MODEL = "gemini-2.5-flash"
@@ -278,21 +279,21 @@ konfirmasi pengelola Pusat Bahasa (18 November 2026), bukan sebagai kutipan webs
 Jangan ciptakan kutipan atau URL baru; tautan sumber ditambahkan oleh aplikasi.
 """.strip()
     model = get_config_value("GEMINI_MODEL", DEFAULT_GENERATION_MODEL)
-    try:
-        response = client.models.generate_content(
-            model=model,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_INSTRUCTION,
-                temperature=0.2,
-                top_p=0.95,
-                top_k=20,
-            ),
-        )
-        return (response.text or "Jawaban tidak tersedia dalam sumber resmi yang telah diperiksa.").strip()
-    except Exception:
-        logging.exception("Kegagalan generasi jawaban Gemini")
-        raise RuntimeError("Gagal membuat jawaban. Silakan coba beberapa saat lagi.")
+    # Jangan mengganti error asli dengan RuntimeError generik:
+    # pemanggil membutuhkan kode HTTP Gemini (429/403/404/dll.) untuk diagnosis.
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_INSTRUCTION,
+            temperature=0.2,
+            top_p=0.95,
+            top_k=20,
+        ),
+    )
+    if not response.text or not response.text.strip():
+        raise RuntimeError("EMPTY_GENERATION_RESPONSE")
+    return response.text.strip()
 
 # ============================================================
 # Tampilan Streamlit
@@ -571,6 +572,9 @@ if question:
 
     with st.chat_message("assistant"):
         contexts = []
+        live_warning = None
+        success = False
+        stage = "pencarian referensi"
 
         with st.spinner("Mencari jawaban paling relevan dari website resmi..."):
             try:
@@ -582,49 +586,53 @@ if question:
                     query=question,
                     top_k=RETRIEVAL_TOP_K,
                 )
-                live_context, live_warning = web_knowledge.live_check(question, contexts, metadata["sources"])
+                stage = "pemeriksaan website terbaru"
+                live_context, live_warning = web_knowledge.live_check(
+                    question, contexts, metadata["sources"]
+                )
+                stage = "pembuatan jawaban Gemini"
                 answer = generate_answer(
                     client=client,
                     question=question,
                     contexts=contexts,
                     live_context=live_context,
                 )
+                success = True
             except Exception as exc:
-                logging.exception("Kegagalan pemrosesan pertanyaan")
-                answer = "Maaf, layanan sedang mengalami kendala. Silakan coba kembali."
+                # Detail asli di terminal, bukan di UI (bisa mengandung data sensitif).
+                logging.exception("Kegagalan chatbot pada tahap %s", stage)
+                answer = friendly_error(exc, stage)
 
             st.markdown(answer)
-            if policy_related(question):
-                st.caption(f"Kebijakan lintas kampus: {SOURCE}, dikonfirmasi {CONFIRMED_AT}.")
-            if "live_warning" in locals() and live_warning:
-                st.warning(live_warning)
-            if contexts:
-                st.markdown("**Sumber web resmi yang ditelusuri:**")
-                cited_urls = set()
-                for ctx in contexts[:5]:
-                    if ctx["url"] not in cited_urls:
-                        st.markdown(f"- [{ctx['title']}]({ctx['url']}) · {ctx['campus']}")
-                        cited_urls.add(ctx["url"])
-
-            with st.expander("Lihat potongan website yang digunakan", expanded=False):
+            if success:
+                if policy_related(question):
+                    st.caption(f"Kebijakan lintas kampus: {SOURCE}, dikonfirmasi {CONFIRMED_AT}.")
+                if live_warning:
+                    st.warning(live_warning)
                 if contexts:
-                    for ctx in contexts:
-                        preview = ctx["text"][:900]
-                        if len(ctx["text"]) > 900:
-                            preview += "..."
-                        safe_preview = html.escape(preview)
-                        st.markdown(
-                            f"""
-                            <div class="source-card">
-                                <strong>{html.escape(ctx["title"])} · skor {ctx["score"]:.3f}</strong>
-                                <p>{safe_preview}</p>
-                                <p><a href="{html.escape(ctx["url"], quote=True)}" target="_blank" rel="noopener noreferrer">Lihat sumber asli</a></p>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-                else:
-                    st.write("Tidak ada sumber web yang cukup relevan.")
+                    st.markdown("**Referensi web yang tersedia untuk jawaban:**")
+                    cited_urls = set()
+                    for ctx in contexts[:5]:
+                        if ctx["url"] not in cited_urls:
+                            st.markdown(f"- [{ctx['title']}]({ctx['url']}) · {ctx['campus']}")
+                            cited_urls.add(ctx["url"])
+
+                    with st.expander("Lihat potongan website yang digunakan", expanded=False):
+                        for ctx in contexts:
+                            preview = ctx["text"][:900]
+                            if len(ctx["text"]) > 900:
+                                preview += "..."
+                            safe_preview = html.escape(preview)
+                            st.markdown(
+                                f"""
+                                <div class="source-card">
+                                    <strong>{html.escape(ctx["title"])} · skor {ctx["score"]:.3f}</strong>
+                                    <p>{safe_preview}</p>
+                                    <p><a href="{html.escape(ctx["url"], quote=True)}" target="_blank" rel="noopener noreferrer">Lihat sumber asli</a></p>
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
 
     st.session_state.messages.append({
         "role": "assistant",
